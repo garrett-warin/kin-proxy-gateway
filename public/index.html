@@ -5,8 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#1b1c20" />
   <title>Kin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="/kin-mark-tab.png" />
   <link rel="stylesheet" href="/index.css" />
+  <style>body,button,input,select{font-family:"DM Sans",Arial,sans-serif}</style>
   <script src="/scram/scramjet.all.js"></script>
   <script src="/baremux/index.js"></script>
   <script src="/register-sw.js" defer></script>
@@ -19,8 +23,6 @@
       <div class="tab-strip">
         <a class="brand-mark" href="/" aria-label="Kin home"><img src="/kin-mark-tab.png" alt="" /></a>
         <div id="tabs" class="tabs" role="tablist">
-          <button class="tab active" data-view="home" role="tab"><img src="/kin-mark-tab.png" alt="" /><span>New tab</span><i>×</i></button>
-          <button class="tab" data-view="bookmarks" role="tab"><span class="bookmark-glyph">◇</span><span>Bookmarks</span><i>×</i></button>
           <button id="new-tab" class="new-tab" aria-label="New tab">+</button>
         </div>
         <div class="window-buttons" aria-hidden="true"><span>—</span><span>□</span><span>×</span></div>
@@ -35,7 +37,7 @@
           <input id="sj-search-engine" value="https://www.bing.com/search?q=%s" type="hidden" />
           <span class="verified">Kin</span>
         </form>
-        <a class="admin-link" style="height:32px;display:inline-flex;align-items:center;border:1px solid #474950;border-radius:8px;padding:0 10px;color:#c8aa87;text-decoration:none;font-size:12px;font-weight:700" href="https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec?admin=1" target="_blank" rel="noopener">Admin</a>
+        <a class="admin-link" style="height:32px;display:inline-flex;align-items:center;border:1px solid #474950;border-radius:8px;padding:0 10px;color:#c8aa87;text-decoration:none;font-size:12px;font-weight:700" href="https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec?admin=1">Admin</a>
         <button id="settings-button" class="tool" aria-label="Preferences">⚙</button>
       </div>
     </header>
@@ -44,7 +46,6 @@
       <section id="home-view" class="view active">
         <div class="hero">
           <img class="wordmark" src="/kin-wordmark.png" alt="Kin" />
-          <p>A quieter way to explore.</p>
           <form id="home-form" class="home-search">
             <span>⌕</span>
             <input id="home-address" autocomplete="off" placeholder="Search with Bing or enter an address" aria-label="Search the web" />

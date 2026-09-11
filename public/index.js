@@ -1,181 +1,26 @@
 "use strict";
-
-const engines = {
-  google: { label: "Google", template: "https://www.google.com/search?q=%s" },
-  duckduckgo: { label: "DuckDuckGo", template: "https://duckduckgo.com/?q=%s" },
-  bing: { label: "Bing", template: "https://www.bing.com/search?q=%s" },
-  brave: { label: "Brave Search", template: "https://search.brave.com/search?q=%s" },
-};
-const starterBookmarks = [
-  { id: "wikipedia", label: "Wikipedia", url: "https://wikipedia.org" },
-  { id: "archive", label: "Internet Archive", url: "https://archive.org" },
-  { id: "weather", label: "Weather", url: "https://weather.com" },
-  { id: "school", label: "FCPS", url: "https://www.fcps.edu" },
-];
-
-const form = document.getElementById("sj-form");
-const address = document.getElementById("sj-address");
-const homeForm = document.getElementById("home-form");
-const homeAddress = document.getElementById("home-address");
-const searchEngine = document.getElementById("sj-search-engine");
-const frameHost = document.getElementById("frame-host");
-const error = document.getElementById("sj-error");
-const errorCode = document.getElementById("sj-error-code");
-const tabs = [...document.querySelectorAll(".tab")];
-let activeFrame = null;
-let currentView = "home";
-let customBookmarks = readJson("kin-bookmarks", []);
-let engineKey = localStorage.getItem("kin-search-engine") || "bing";
-let showStarters = localStorage.getItem("kin-show-starters") !== "false";
-if (!engines[engineKey]) engineKey = "bing";
-
-// Bing is Kin's default; migrate the former default once without affecting other choices.
-if (localStorage.getItem("kin-search-engine") === "google" && !localStorage.getItem("kin-bing-default-v1")) engineKey = "bing";
-localStorage.setItem("kin-bing-default-v1", "1");
-
-const { ScramjetController } = $scramjetLoadController();
-const scramjet = new ScramjetController({ files: { wasm: "/scram/scramjet.wasm.wasm", all: "/scram/scramjet.all.js", sync: "/scram/scramjet.sync.js" } });
-const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
-scramjet.init();
-
-function readJson(key, fallback) {
-  try { const value = JSON.parse(localStorage.getItem(key) || "null"); return Array.isArray(value) ? value : fallback; }
-  catch { return fallback; }
-}
-
-function host(url) {
-  try { return new URL(url).hostname.replace(/^www\./, ""); }
-  catch { return "Website"; }
-}
-
-function normalizeUrl(value) {
-  const text = value.trim();
-  if (!text) return "";
-  if (/^https?:\/\//i.test(text)) return text;
-  if (/^[\w-]+(?:\.[\w-]+)+(?:[/:?#].*)?$/i.test(text)) return `https://${text}`;
-  return engines[engineKey].template.replace("%s", encodeURIComponent(text));
-}
-
-function setEngine(key) {
-  engineKey = engines[key] ? key : "bing";
-  localStorage.setItem("kin-search-engine", engineKey);
-  searchEngine.value = engines[engineKey].template;
-  document.getElementById("engine-label").textContent = engines[engineKey].label;
-  homeAddress.placeholder = `Search with ${engines[engineKey].label} or enter an address`;
-  document.getElementById("engine-select").value = engineKey;
-}
-
-function showError(message, detail = "") {
-  error.textContent = message;
-  error.classList.add("show");
-  errorCode.textContent = detail;
-  window.setTimeout(() => error.classList.remove("show"), 6000);
-}
-
-function setView(view) {
-  currentView = view;
-  document.querySelectorAll(".view").forEach((node) => node.classList.toggle("active", node.id === `${view}-view`));
-  frameHost.classList.toggle("active", view === "browser");
-  tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.view === view || (view === "browser" && tab.dataset.view === "home")));
-  const firstTab = tabs[0].querySelector("span:nth-child(2)");
-  firstTab.textContent = view === "browser" ? host(address.value) : "New tab";
-}
-
-async function openAddress(raw) {
-  const url = normalizeUrl(raw);
-  if (!url) return;
-  address.value = url;
-  homeAddress.value = raw;
-  try {
-    await registerSW();
-    const wispUrl = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/wisp/`;
-    if ((await connection.getTransport()) !== "/libcurl/index.mjs") {
-      await connection.setTransport("/libcurl/index.mjs", [{ websocket: wispUrl }]);
-    }
-    if (!activeFrame) {
-      activeFrame = scramjet.createFrame();
-      activeFrame.frame.id = "sj-frame";
-      frameHost.appendChild(activeFrame.frame);
-    }
-    setView("browser");
-    activeFrame.go(url);
-  } catch (cause) {
-    showError("Kin could not open that page.", cause && cause.toString ? cause.toString() : String(cause));
-  }
-}
-
-function renderBookmarks() {
-  const all = [...starterBookmarks, ...customBookmarks];
-  const quick = showStarters ? all : customBookmarks;
-  renderGrid(document.getElementById("bookmark-grid"), quick);
-  renderGrid(document.getElementById("all-bookmarks"), all);
-}
-
-function renderGrid(container, items) {
-  if (!items.length) { container.innerHTML = '<div class="empty">No bookmarks yet. Add one to make Kin yours.</div>'; return; }
-  container.innerHTML = "";
-  items.forEach((item) => {
-    const card = document.createElement("article");
-    card.className = "bookmark-card";
-    const main = document.createElement("button");
-    main.className = "bookmark-main";
-    main.innerHTML = `<span class="bookmark-icon">◎</span><span class="bookmark-copy"><b></b><small></small></span>`;
-    main.querySelector("b").textContent = item.label;
-    main.querySelector("small").textContent = host(item.url);
-    main.addEventListener("click", () => openAddress(item.url));
-    card.appendChild(main);
-    if (item.custom) {
-      const remove = document.createElement("button");
-      remove.className = "remove-bookmark";
-      remove.textContent = "×";
-      remove.setAttribute("aria-label", `Remove ${item.label}`);
-      remove.addEventListener("click", () => {
-        customBookmarks = customBookmarks.filter((bookmark) => bookmark.id !== item.id);
-        localStorage.setItem("kin-bookmarks", JSON.stringify(customBookmarks));
-        renderBookmarks();
-      });
-      card.appendChild(remove);
-    }
-    container.appendChild(card);
-  });
-}
-
-function openModal(id) {
-  document.getElementById("modal-backdrop").classList.remove("hidden");
-  document.querySelectorAll(".modal").forEach((modal) => modal.classList.toggle("hidden", modal.id !== id));
-}
-
-function closeModal() {
-  document.getElementById("modal-backdrop").classList.add("hidden");
-  document.querySelectorAll(".modal").forEach((modal) => modal.classList.add("hidden"));
-}
-
-form.addEventListener("submit", (event) => { event.preventDefault(); openAddress(address.value); });
-homeForm.addEventListener("submit", (event) => { event.preventDefault(); openAddress(homeAddress.value); });
-tabs.forEach((tab) => tab.addEventListener("click", (event) => { if (event.target.tagName !== "I") setView(tab.dataset.view); }));
-document.getElementById("new-tab").addEventListener("click", () => { address.value = ""; homeAddress.value = ""; setView("home"); homeAddress.focus(); });
-document.getElementById("back").addEventListener("click", () => { if (currentView === "browser" && activeFrame) activeFrame.frame.contentWindow.history.back(); else setView("home"); });
-document.getElementById("forward").addEventListener("click", () => { if (activeFrame) activeFrame.frame.contentWindow.history.forward(); });
-document.getElementById("reload").addEventListener("click", () => { if (currentView === "browser" && activeFrame) activeFrame.frame.contentWindow.location.reload(); else location.reload(); });
-document.getElementById("settings-button").addEventListener("click", () => openModal("settings-modal"));
-document.getElementById("add-bookmark").addEventListener("click", () => openModal("bookmark-modal"));
-document.getElementById("add-bookmark-page").addEventListener("click", () => openModal("bookmark-modal"));
-document.querySelectorAll(".close-modal").forEach((button) => button.addEventListener("click", closeModal));
-document.getElementById("modal-backdrop").addEventListener("click", (event) => { if (event.target.id === "modal-backdrop") closeModal(); });
-document.getElementById("engine-select").addEventListener("change", (event) => setEngine(event.target.value));
-document.getElementById("show-starters").addEventListener("change", (event) => { showStarters = event.target.checked; localStorage.setItem("kin-show-starters", String(showStarters)); renderBookmarks(); });
-document.getElementById("bookmark-modal").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const label = document.getElementById("bookmark-name").value.trim();
-  let url = document.getElementById("bookmark-url").value.trim();
-  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
-  customBookmarks.push({ id: crypto.randomUUID(), label, url, custom: true });
-  localStorage.setItem("kin-bookmarks", JSON.stringify(customBookmarks));
-  event.target.reset();
-  closeModal();
-  renderBookmarks();
-});
-
-document.getElementById("show-starters").checked = showStarters;
-setEngine(engineKey);
-renderBookmarks();
+const engines={google:{label:"Google",template:"https://www.google.com/search?q=%s"},duckduckgo:{label:"DuckDuckGo",template:"https://duckduckgo.com/?q=%s"},bing:{label:"Bing",template:"https://www.bing.com/search?q=%s"},brave:{label:"Brave Search",template:"https://search.brave.com/search?q=%s"}};
+const starters=[{id:"wikipedia",label:"Wikipedia",url:"https://wikipedia.org"},{id:"archive",label:"Internet Archive",url:"https://archive.org"},{id:"weather",label:"Weather",url:"https://weather.com"},{id:"school",label:"FCPS",url:"https://www.fcps.edu"}];
+const form=document.querySelector("#sj-form"),address=document.querySelector("#sj-address"),homeForm=document.querySelector("#home-form"),homeAddress=document.querySelector("#home-address"),searchEngine=document.querySelector("#sj-search-engine"),frameHost=document.querySelector("#frame-host"),error=document.querySelector("#sj-error"),errorCode=document.querySelector("#sj-error-code"),tabsNode=document.querySelector("#tabs"),newTab=document.querySelector("#new-tab");
+let bookmarks=readJson("kin-bookmarks",[]),engineKey=localStorage.getItem("kin-search-engine")||"bing",showStarters=localStorage.getItem("kin-show-starters")!=="false",selectedId,seq=0;
+const tabState=[];
+if(!engines[engineKey])engineKey="bing";if(localStorage.getItem("kin-search-engine")==="google"&&!localStorage.getItem("kin-bing-default-v1"))engineKey="bing";localStorage.setItem("kin-bing-default-v1","1");
+const {ScramjetController}=$scramjetLoadController(),scramjet=new ScramjetController({files:{wasm:"/scram/scramjet.wasm.wasm",all:"/scram/scramjet.all.js",sync:"/scram/scramjet.sync.js"}}),connection=new BareMux.BareMuxConnection("/baremux/worker.js");scramjet.init();
+function readJson(key,fallback){try{const value=JSON.parse(localStorage.getItem(key)||"null");return Array.isArray(value)?value:fallback}catch{return fallback}}
+function host(url){try{return new URL(url).hostname.replace(/^www\./,"")}catch{return"New tab"}}
+function normalize(value){const text=value.trim();if(!text)return"";if(/^https?:\/\//i.test(text))return text;if(/^[\w-]+(?:\.[\w-]+)+(?:[/:?#].*)?$/i.test(text))return`https://${text}`;return engines[engineKey].template.replace("%s",encodeURIComponent(text))}
+function createTab(view="home"){const tab={id:`tab-${Date.now()}-${++seq}`,view,url:"",raw:"",frame:null};tabState.push(tab);return tab}
+function current(){return tabState.find(tab=>tab.id===selectedId)||tabState[0]}
+function renderTabs(){tabsNode.querySelectorAll(".tab").forEach(node=>node.remove());tabState.forEach(tab=>{const node=document.createElement("button");node.className=`tab${tab.id===selectedId?" active":""}`;node.type="button";node.setAttribute("role","tab");node.innerHTML='<img src="/kin-mark-tab.png" alt=""><span></span><i aria-label="Close tab">×</i>';node.querySelector("span").textContent=tab.view==="bookmarks"?"Bookmarks":tab.url?host(tab.url):"New tab";node.addEventListener("click",event=>event.target.closest("i")?closeTab(tab.id):selectTab(tab.id));tabsNode.insertBefore(node,newTab)})}
+function selectTab(id){selectedId=id;const tab=current();address.value=tab.url;homeAddress.value=tab.raw;document.querySelectorAll(".view").forEach(node=>node.classList.toggle("active",node.id===`${tab.view}-view`));frameHost.classList.toggle("active",tab.view==="browser");tabState.forEach(candidate=>{if(candidate.frame)candidate.frame.frame.style.display=candidate.id===id&&tab.view==="browser"?"block":"none"});renderTabs()}
+function closeTab(id){const index=tabState.findIndex(tab=>tab.id===id);if(index<0)return;const [closed]=tabState.splice(index,1);if(closed.frame)closed.frame.frame.remove();if(!tabState.length){const tab=createTab();selectedId=tab.id}else if(selectedId===id)selectedId=tabState[Math.max(0,index-1)].id;selectTab(selectedId)}
+function setEngine(key){engineKey=engines[key]?key:"bing";localStorage.setItem("kin-search-engine",engineKey);searchEngine.value=engines[engineKey].template;document.querySelector("#engine-label").textContent=engines[engineKey].label;homeAddress.placeholder=`Search with ${engines[engineKey].label} or enter an address`;document.querySelector("#engine-select").value=engineKey}
+function showError(message,detail=""){error.textContent=message;error.classList.add("show");errorCode.textContent=detail;setTimeout(()=>error.classList.remove("show"),6000)}
+async function openAddress(raw){const url=normalize(raw);if(!url)return;const tab=current();tab.url=url;tab.raw=raw;try{await registerSW();const wispUrl=`${location.protocol==="https:"?"wss":"ws"}://${location.host}/wisp/`;if(await connection.getTransport()!=="/libcurl/index.mjs")await connection.setTransport("/libcurl/index.mjs",[{websocket:wispUrl}]);if(!tab.frame){tab.frame=scramjet.createFrame();tab.frame.frame.className="kin-frame";frameHost.appendChild(tab.frame.frame)}tab.view="browser";tab.frame.go(url);selectTab(tab.id)}catch(cause){showError("Kin could not open that page.",String(cause))}}
+function renderBookmarks(){const all=[...starters,...bookmarks];grid(document.querySelector("#bookmark-grid"),showStarters?all:bookmarks);grid(document.querySelector("#all-bookmarks"),all)}
+function grid(container,items){if(!items.length){container.innerHTML='<div class="empty">No bookmarks yet. Add one to make Kin yours.</div>';return}container.innerHTML="";items.forEach(item=>{const card=document.createElement("article");card.className="bookmark-card";const main=document.createElement("button");main.className="bookmark-main";main.innerHTML='<span class="bookmark-icon">◎</span><span class="bookmark-copy"><b></b><small></small></span>';main.querySelector("b").textContent=item.label;main.querySelector("small").textContent=host(item.url);main.onclick=()=>openAddress(item.url);card.append(main);if(item.custom){const remove=document.createElement("button");remove.className="remove-bookmark";remove.textContent="×";remove.onclick=()=>{bookmarks=bookmarks.filter(bookmark=>bookmark.id!==item.id);localStorage.setItem("kin-bookmarks",JSON.stringify(bookmarks));renderBookmarks()};card.append(remove)}container.append(card)})}
+function openModal(id){document.querySelector("#modal-backdrop").classList.remove("hidden");document.querySelectorAll(".modal").forEach(node=>node.classList.toggle("hidden",node.id!==id))}
+function closeModal(){document.querySelector("#modal-backdrop").classList.add("hidden");document.querySelectorAll(".modal").forEach(node=>node.classList.add("hidden"))}
+form.onsubmit=event=>{event.preventDefault();openAddress(address.value)};homeForm.onsubmit=event=>{event.preventDefault();openAddress(homeAddress.value)};newTab.onclick=()=>{const tab=createTab();selectTab(tab.id);homeAddress.focus()};document.querySelector("#back").onclick=()=>{const tab=current();if(tab.view==="browser"&&tab.frame)tab.frame.frame.contentWindow.history.back()};document.querySelector("#forward").onclick=()=>{const tab=current();if(tab.frame)tab.frame.frame.contentWindow.history.forward()};document.querySelector("#reload").onclick=()=>{const tab=current();if(tab.view==="browser"&&tab.frame)tab.frame.frame.contentWindow.location.reload()};document.querySelector("#settings-button").onclick=()=>openModal("settings-modal");document.querySelector("#add-bookmark").onclick=()=>openModal("bookmark-modal");document.querySelector("#add-bookmark-page").onclick=()=>openModal("bookmark-modal");document.querySelectorAll(".close-modal").forEach(button=>button.onclick=closeModal);document.querySelector("#modal-backdrop").onclick=event=>{if(event.target.id==="modal-backdrop")closeModal()};document.querySelector("#engine-select").onchange=event=>setEngine(event.target.value);document.querySelector("#show-starters").onchange=event=>{showStarters=event.target.checked;localStorage.setItem("kin-show-starters",String(showStarters));renderBookmarks()};
+document.querySelector("#bookmark-modal").onsubmit=event=>{event.preventDefault();const label=document.querySelector("#bookmark-name").value.trim();let url=document.querySelector("#bookmark-url").value.trim();if(!/^https?:\/\//i.test(url))url=`https://${url}`;bookmarks.push({id:crypto.randomUUID(),label,url,custom:true});localStorage.setItem("kin-bookmarks",JSON.stringify(bookmarks));event.target.reset();closeModal();renderBookmarks()};
+document.querySelector("#show-starters").checked=showStarters;setEngine(engineKey);const first=createTab();selectedId=first.id;selectTab(selectedId);renderBookmarks();
