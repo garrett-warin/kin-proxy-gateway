@@ -25,9 +25,13 @@ const tabs = [...document.querySelectorAll(".tab")];
 let activeFrame = null;
 let currentView = "home";
 let customBookmarks = readJson("kin-bookmarks", []);
-let engineKey = localStorage.getItem("kin-search-engine") || "google";
+let engineKey = localStorage.getItem("kin-search-engine") || "bing";
 let showStarters = localStorage.getItem("kin-show-starters") !== "false";
-if (!engines[engineKey]) engineKey = "google";
+if (!engines[engineKey]) engineKey = "bing";
+
+// Bing is Kin's default; migrate the former default once without affecting other choices.
+if (localStorage.getItem("kin-search-engine") === "google" && !localStorage.getItem("kin-bing-default-v1")) engineKey = "bing";
+localStorage.setItem("kin-bing-default-v1", "1");
 
 const { ScramjetController } = $scramjetLoadController();
 const scramjet = new ScramjetController({ files: { wasm: "/scram/scramjet.wasm.wasm", all: "/scram/scramjet.all.js", sync: "/scram/scramjet.sync.js" } });
@@ -53,7 +57,7 @@ function normalizeUrl(value) {
 }
 
 function setEngine(key) {
-  engineKey = engines[key] ? key : "google";
+  engineKey = engines[key] ? key : "bing";
   localStorage.setItem("kin-search-engine", engineKey);
   searchEngine.value = engines[engineKey].template;
   document.getElementById("engine-label").textContent = engines[engineKey].label;
