@@ -12,7 +12,7 @@ import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
 
 const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
 const tokenSecret = process.env.KIN_TOKEN_SECRET;
-const accessGateUrl = "https://script.google.com/a/macros/fcpsschools.net/s/AKfycbyY2Zb1SO7VmdvRxE1WMquu_mFMLRclF1rqz9GrgfMTMU6ja2hRm0gmlPqxvZrcNH1T/exec";
+const accessGateUrl = "https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec";
 
 if (!tokenSecret) throw new Error("KIN_TOKEN_SECRET is required.");
 
