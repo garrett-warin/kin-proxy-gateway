@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="/kin-mark-tab.png" />
   <link rel="stylesheet" href="/index.css" />
-  <style>body,button,input,select{font-family:"DM Sans",Arial,sans-serif}</style>
+  <style>body,button,input,select{font-family:"DM Sans",Arial,sans-serif}.burn{height:34px;border:1px solid #84412e;border-radius:9px;background:#2a1715;color:#ffb087;padding:0 11px;font-size:12px;font-weight:700;cursor:pointer}.burn:hover{background:#3a1c17}.burn-overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:rgba(9,9,10,.93);opacity:0;pointer-events:none;transition:opacity .22s}.burn-overlay.active{opacity:1;pointer-events:auto}.burn-flame{font-size:94px;filter:drop-shadow(0 0 24px #ff5c2b);animation:flame .52s ease-in-out infinite alternate}.burn-overlay strong{display:block;margin-top:12px;text-align:center;font-size:22px}@keyframes flame{to{transform:scale(1.13) rotate(4deg);filter:drop-shadow(0 0 48px #ff7d2e)}}.history-list{display:grid;gap:8px;margin-top:18px}.history-entry{display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid #383a40;border-radius:11px;background:#191a1d;padding:13px}.history-entry button{border:0;background:transparent;color:#f5f1eb;text-align:left;cursor:pointer}.history-entry small{color:#929499}</style>
   <script src="/scram/scramjet.all.js"></script>
   <script src="/baremux/index.js"></script>
   <script src="/register-sw.js" defer></script>
@@ -37,6 +37,7 @@
           <input id="sj-search-engine" value="https://www.bing.com/search?q=%s" type="hidden" />
           <span class="verified">Kin</span>
         </form>
+        <button id="burn-button" class="burn" type="button">Burn history</button>
         <a class="admin-link" style="height:32px;display:inline-flex;align-items:center;border:1px solid #474950;border-radius:8px;padding:0 10px;color:#c8aa87;text-decoration:none;font-size:12px;font-weight:700" href="https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec?admin=1">Admin</a>
         <button id="settings-button" class="tool" aria-label="Preferences">⚙</button>
       </div>
@@ -64,6 +65,11 @@
         <div id="all-bookmarks" class="bookmark-grid"></div>
       </section>
 
+      <section id="history-view" class="view bookmarks-view">
+        <div class="page-title"><div><small>On this device</small><h1>History</h1><p>Recent pages opened in Kin.</p></div><button id="clear-history" class="primary">Clear history</button></div>
+        <div id="history-list" class="history-list"></div>
+      </section>
+
       <section id="frame-host" class="frame-host" aria-live="polite"></section>
       <div id="sj-error" class="error" role="alert"></div>
       <pre id="sj-error-code" hidden></pre>
@@ -75,6 +81,7 @@
       <header><div><small>Kin</small><h2 id="settings-title">Preferences</h2></div><button class="close-modal" aria-label="Close">×</button></header>
       <label class="field"><span>Search engine</span><select id="engine-select"><option value="bing">Bing</option><option value="google">Google</option><option value="duckduckgo">DuckDuckGo</option><option value="brave">Brave Search</option></select></label>
       <label class="toggle-row"><span><b>Show starter bookmarks</b><small>Display Kin's suggested shortcuts.</small></span><input id="show-starters" type="checkbox" checked /></label>
+      <div class="modal-actions"><button id="history-button" class="quiet" type="button">View history</button></div>
     </section>
     <form id="bookmark-modal" class="modal hidden" role="dialog" aria-modal="true">
       <header><div><small>Quick access</small><h2>Add bookmark</h2></div><button type="button" class="close-modal" aria-label="Close">×</button></header>
@@ -83,5 +90,6 @@
       <div class="modal-actions"><button type="button" class="close-modal quiet">Cancel</button><button class="primary" type="submit">Save bookmark</button></div>
     </form>
   </div>
+  <div id="burn-overlay" class="burn-overlay"><div><div class="burn-flame">🔥</div><strong>Burning local history…</strong></div></div>
 </body>
 </html>
