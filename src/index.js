@@ -12,6 +12,7 @@ import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
 
 const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
 const tokenSecret = process.env.KIN_TOKEN_SECRET;
+const accessGateUrl = "https://script.google.com/a/macros/fcpsschools.net/s/AKfycbwRBUs8cI9oSHyEvLK0baFDsneXw1VZJYdIDpSZephN6aRXblgk2xgOoc5gA-MhFD5Z/exec";
 
 if (!tokenSecret) throw new Error("KIN_TOKEN_SECRET is required.");
 
@@ -72,6 +73,11 @@ fastify.addHook("onRequest", async (request, reply) => {
 		return reply.redirect(302, `${url.pathname}${url.search}`);
 	}
 	if (!verifyKinToken(cookieValue(request.headers.cookie, "kin_session"))) {
+		// The main Kin address is the friendly entry point. Authentication happens
+		// in the FCPS Apps Script Web App before it redirects back with a token.
+		if (url.pathname === "/" && (request.method === "GET" || request.method === "HEAD")) {
+			return reply.redirect(302, accessGateUrl);
+		}
 		return reply.code(403).type("text/html").send("<h1>Kin access required</h1><p>Start from the FCPS Kin page to continue.</p>");
 	}
 });
