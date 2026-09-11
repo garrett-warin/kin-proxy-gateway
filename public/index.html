@@ -1,66 +1,85 @@
 <!doctype html>
-<html>
-	<head>
-		<meta charset="utf-8" />
-		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
-		/>
-		<title>Scramjet</title>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#1b1c20" />
+  <title>Kin</title>
+  <link rel="icon" href="/kin-mark-tab.png" />
+  <link rel="stylesheet" href="/index.css" />
+  <script src="/scram/scramjet.all.js"></script>
+  <script src="/baremux/index.js"></script>
+  <script src="/register-sw.js" defer></script>
+  <script src="/search.js" defer></script>
+  <script src="/index.js" defer></script>
+</head>
+<body>
+  <div class="browser-shell">
+    <header class="browser-chrome">
+      <div class="tab-strip">
+        <a class="brand-mark" href="/" aria-label="Kin home"><img src="/kin-mark-tab.png" alt="" /></a>
+        <div id="tabs" class="tabs" role="tablist">
+          <button class="tab active" data-view="home" role="tab"><img src="/kin-mark-tab.png" alt="" /><span>New tab</span><i>×</i></button>
+          <button class="tab" data-view="bookmarks" role="tab"><span class="bookmark-glyph">◇</span><span>Bookmarks</span><i>×</i></button>
+          <button id="new-tab" class="new-tab" aria-label="New tab">+</button>
+        </div>
+        <div class="window-buttons" aria-hidden="true"><span>—</span><span>□</span><span>×</span></div>
+      </div>
+      <div class="toolbar">
+        <button id="back" class="tool" aria-label="Back">‹</button>
+        <button id="forward" class="tool" aria-label="Forward">›</button>
+        <button id="reload" class="tool reload" aria-label="Reload">↻</button>
+        <form id="sj-form" class="omnibox">
+          <span class="search-icon">⌕</span>
+          <input id="sj-address" autocomplete="off" placeholder="Search or enter an address" aria-label="Search or enter an address" />
+          <input id="sj-search-engine" value="https://www.google.com/search?q=%s" type="hidden" />
+          <span class="verified">Kin</span>
+        </form>
+        <button id="settings-button" class="tool" aria-label="Preferences">⚙</button>
+      </div>
+    </header>
 
-		<link rel="shortcut icon" content="favicon.webp" />
-	
-		<script src="/scram/scramjet.all.js"></script>
-		<script src="/baremux/index.js"></script>
-		
-		<link rel="stylesheet" href="index.css" />
-		<script src="register-sw.js" defer></script>
-		<script src="search.js" defer></script>
-		<script src="index.js" defer></script>
-	</head>
+    <main id="start-page" class="start-page">
+      <section id="home-view" class="view active">
+        <div class="hero">
+          <img class="wordmark" src="/kin-wordmark.png" alt="Kin" />
+          <p>A quieter way to explore.</p>
+          <form id="home-form" class="home-search">
+            <span>⌕</span>
+            <input id="home-address" autocomplete="off" placeholder="Search with Google or enter an address" aria-label="Search the web" />
+            <button type="submit">Go</button>
+          </form>
+          <div class="hero-meta"><span id="engine-label">Google</span><i></i><span>FCPS verified</span><i></i><span>Private session</span></div>
+        </div>
+        <section class="quick-access">
+          <div class="section-title"><div><small>Your space</small><h2>Quick access</h2></div><button id="add-bookmark">+ Add bookmark</button></div>
+          <div id="bookmark-grid" class="bookmark-grid"></div>
+        </section>
+      </section>
 
-	<body>
-		<div title="Scramjet Logo" class="flex-center logo-wrapper header-center">
-			<img class="logo" src="sj.png" alt="Scramjet" />
-			<h1>Scramjet | MW</h1>
-		</div>
-		<div class="flex-center desc left-margin">
-			<p>
-				Scramjet is an experimental interception based web proxy designed to
-				evade internet censorship, bypass arbitrary web browser restrictions and
-				innovate web proxy technologies.
-			</p>
-		</div>
+      <section id="bookmarks-view" class="view bookmarks-view">
+        <div class="page-title"><div><small>Your space</small><h1>Bookmarks</h1><p>Your favorite corners of the web, saved on this device.</p></div><button id="add-bookmark-page" class="primary">+ Add bookmark</button></div>
+        <div id="all-bookmarks" class="bookmark-grid"></div>
+      </section>
 
-		<form id="sj-form" class="flex-center">
-			<input
-				id="sj-search-engine"
-				value="https://www.google.com/search?q=%s"
-				type="hidden"
-			/>
-			<input id="sj-address" type="text" placeholder="Search the web freely" />
-		</form>
-		<div class="desc left-margin">
-			<p id="sj-error"></p>
-			<pre id="sj-error-code"></pre>
-		</div>
-		<footer>
-			<div>
-				<a
-					title="The Mercury Workshop GitHub organization"
-					href="https://github.com/MercuryWorkshop"
-					>Mercury Workshop</a
-				>
-				<a
-					title="The example demo app for Scramjet"
-					href="https://github.com/MercuryWorkshop/Scramjet-Demo"
-					>GitHub</a
-				>
-				<a title="License information" href="credits.html">Credits</a>
-			</div>
-			<div>
-				<span>Scramjet &copy; MW 2025</span>
-			</div>
-		</footer>
-	</body>
+      <section id="frame-host" class="frame-host" aria-live="polite"></section>
+      <div id="sj-error" class="error" role="alert"></div>
+      <pre id="sj-error-code" hidden></pre>
+    </main>
+  </div>
+
+  <div id="modal-backdrop" class="modal-backdrop hidden">
+    <section id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <header><div><small>Kin</small><h2 id="settings-title">Preferences</h2></div><button class="close-modal" aria-label="Close">×</button></header>
+      <label class="field"><span>Search engine</span><select id="engine-select"><option value="google">Google</option><option value="duckduckgo">DuckDuckGo</option><option value="bing">Bing</option><option value="brave">Brave Search</option></select></label>
+      <label class="toggle-row"><span><b>Show starter bookmarks</b><small>Display Kin's suggested shortcuts.</small></span><input id="show-starters" type="checkbox" checked /></label>
+    </section>
+    <form id="bookmark-modal" class="modal hidden" role="dialog" aria-modal="true">
+      <header><div><small>Quick access</small><h2>Add bookmark</h2></div><button type="button" class="close-modal" aria-label="Close">×</button></header>
+      <label class="field"><span>Name</span><input id="bookmark-name" maxlength="50" required placeholder="School portal" /></label>
+      <label class="field"><span>Address</span><input id="bookmark-url" required placeholder="example.com" /></label>
+      <div class="modal-actions"><button type="button" class="close-modal quiet">Cancel</button><button class="primary" type="submit">Save bookmark</button></div>
+    </form>
+  </div>
+</body>
 </html>
