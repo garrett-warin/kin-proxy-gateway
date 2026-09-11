@@ -11,11 +11,13 @@
   <link rel="icon" href="/kin-mark-tab.png" />
   <link rel="stylesheet" href="/index.css" />
   <style>body,button,input,select{font-family:"DM Sans",Arial,sans-serif}.burn{height:34px;border:1px solid #84412e;border-radius:9px;background:#2a1715;color:#ffb087;padding:0 11px;font-size:12px;font-weight:700;cursor:pointer}.burn:hover{background:#3a1c17}.burn-overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:rgba(9,9,10,.93);opacity:0;pointer-events:none;transition:opacity .22s}.burn-overlay.active{opacity:1;pointer-events:auto}.burn-flame{font-size:94px;filter:drop-shadow(0 0 24px #ff5c2b);animation:flame .52s ease-in-out infinite alternate}.burn-overlay strong{display:block;margin-top:12px;text-align:center;font-size:22px}@keyframes flame{to{transform:scale(1.13) rotate(4deg);filter:drop-shadow(0 0 48px #ff7d2e)}}.history-list{display:grid;gap:8px;margin-top:18px}.history-entry{display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid #383a40;border-radius:11px;background:#191a1d;padding:13px}.history-entry button{border:0;background:transparent;color:#f5f1eb;text-align:left;cursor:pointer}.history-entry small{color:#929499}</style>
+  <style>.details-button{height:34px;border:1px solid #474950;border-radius:9px;background:transparent;color:#d4d5d7;padding:0 11px;font-size:12px;font-weight:700;cursor:pointer}.details-button:hover{border-color:#80572f;color:#fff}.details-modal{width:min(100%,560px)}.details-intro{margin:0;color:#929499;line-height:1.5;font-size:13px}.spec-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:20px}.spec-grid>div{min-height:93px;border:1px solid #383a40;border-radius:11px;background:#17181b;padding:12px}.spec-grid small,.spec-grid b,.spec-grid span{display:block}.spec-grid small{color:#ce8744;font-size:9px;letter-spacing:.12em}.spec-grid b{margin-top:9px;font-size:13px}.spec-grid span{margin-top:5px;color:#929499;font-size:11px;line-height:1.35}.engine-note{margin-top:12px;border-left:2px solid #f3a04b;padding:3px 0 3px 12px}.engine-note b{font-size:12px}.engine-note p{margin:5px 0 0;color:#929499;font-size:12px;line-height:1.45}@media(max-width:520px){.details-button{display:none}.spec-grid{grid-template-columns:1fr}}</style>
   <script src="/scram/scramjet.all.js"></script>
   <script src="/baremux/index.js"></script>
   <script src="/register-sw.js" defer></script>
   <script src="/search.js" defer></script>
   <script src="/index.js" defer></script>
+  <script defer>document.addEventListener('DOMContentLoaded',()=>{document.querySelector('#details-button').onclick=()=>openModal('details-modal')})</script>
 </head>
 <body>
   <div class="browser-shell">
@@ -38,6 +40,7 @@
           <span class="verified">Kin</span>
         </form>
         <button id="burn-button" class="burn" type="button">Burn history</button>
+        <button id="details-button" class="details-button" type="button">Details</button>
         <a class="admin-link" style="height:32px;display:inline-flex;align-items:center;border:1px solid #474950;border-radius:8px;padding:0 10px;color:#c8aa87;text-decoration:none;font-size:12px;font-weight:700" href="https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec?admin=1">Admin</a>
         <button id="settings-button" class="tool" aria-label="Preferences">⚙</button>
       </div>
@@ -89,6 +92,13 @@
       <label class="field"><span>Address</span><input id="bookmark-url" required placeholder="example.com" /></label>
       <div class="modal-actions"><button type="button" class="close-modal quiet">Cancel</button><button class="primary" type="submit">Save bookmark</button></div>
     </form>
+    <section id="details-modal" class="modal details-modal hidden" role="dialog" aria-modal="true" aria-labelledby="details-title">
+      <header><div><small>Kin browser</small><h2 id="details-title">Built for the everyday web</h2></div><button class="close-modal" aria-label="Close">×</button></header>
+      <p class="details-intro">Kin is a browser-style web workspace with tabs, local bookmarks, local history controls, and an FCPS access gate.</p>
+      <div class="spec-grid"><div><small>ENGINE</small><b>Modified Scramjet</b><span>Web proxy runtime</span></div><div><small>SEARCH</small><b>Choice of engine</b><span>Bing, Google, Brave, or DuckDuckGo</span></div><div><small>YOUR DATA</small><b>Stored on this device</b><span>Bookmarks and history controls live locally</span></div><div><small>ACCESS</small><b>FCPS verified</b><span>Account access is handled through Kin’s gate</span></div></div>
+      <div class="engine-note"><b>About the engine</b><p>Kin uses a modified Scramjet integration for page loading and navigation. Kin provides the browser interface, tabs, search, and local workspace tools around it.</p></div>
+      <div class="modal-actions"><button class="close-modal primary" type="button">Done</button></div>
+    </section>
   </div>
   <div id="burn-overlay" class="burn-overlay"><div><div class="burn-flame">🔥</div><strong>Burning local history…</strong></div></div>
 </body>
