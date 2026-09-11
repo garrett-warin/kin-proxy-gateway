@@ -70,13 +70,13 @@ fastify.addHook("onRequest", async (request, reply) => {
 		if (!claims) return reply.code(403).type("text/html").send("<h1>Kin access denied</h1><p>Your FCPS access link is invalid or expired. Return to Kin and try again.</p>");
 		url.searchParams.delete("kin_token");
 		reply.header("Set-Cookie", `kin_session=${incomingToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${Math.max(1, claims.exp - Math.floor(Date.now() / 1000))}`);
-		return reply.redirect(302, `${url.pathname}${url.search}`);
+		return reply.redirect(`${url.pathname}${url.search}`, 302);
 	}
 	if (!verifyKinToken(cookieValue(request.headers.cookie, "kin_session"))) {
 		// The main Kin address is the friendly entry point. Authentication happens
 		// in the FCPS Apps Script Web App before it redirects back with a token.
 		if (url.pathname === "/" && (request.method === "GET" || request.method === "HEAD")) {
-			return reply.redirect(302, accessGateUrl);
+			return reply.redirect(accessGateUrl, 302);
 		}
 		return reply.code(403).type("text/html").send("<h1>Kin access required</h1><p>Start from the FCPS Kin page to continue.</p>");
 	}
