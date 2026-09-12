@@ -6,7 +6,6 @@ import { server as wisp, logging } from "@mercuryworkshop/wisp-js/server";
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 
-import { scramjetPath } from "@mercuryworkshop/scramjet/path";
 import { libcurlPath } from "@mercuryworkshop/libcurl-transport";
 import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
 
@@ -88,7 +87,9 @@ fastify.register(fastifyStatic, {
 });
 
 fastify.register(fastifyStatic, {
-	root: scramjetPath,
+	// KinFire is served at the legacy Scramjet asset path so the browser shell,
+	// service worker, and engine all load the same runtime build.
+	root: fileURLToPath(new URL("../public/scram/", import.meta.url)),
 	prefix: "/scram/",
 	decorateReply: false,
 });
