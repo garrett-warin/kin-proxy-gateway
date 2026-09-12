@@ -1,12 +1,12 @@
 importScripts("/scram/scramjet.all.js");
 
-const { ScramjetServiceWorker } = $scramjetLoadWorker();
-const scramjet = new ScramjetServiceWorker();
+const { ScramjetServiceWorker } = $kinfireLoadWorker();
+const kinfire = new ScramjetServiceWorker();
 
 async function handleRequest(event) {
-	await scramjet.loadConfig();
-	if (scramjet.route(event)) {
-		return scramjet.fetch(event);
+	await kinfire.loadConfig();
+	if (kinfire.route(event)) {
+		return kinfire.fetch(event);
 	}
 	return fetch(event.request);
 }
