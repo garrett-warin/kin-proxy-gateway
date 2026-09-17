@@ -22,7 +22,7 @@
   <div class="browser-shell">
     <header class="browser-chrome">
       <div class="tab-strip">
-        <a class="brand-mark" href="/" aria-label="Kin home"><img src="/kin-mark-tab.png" alt="" /><span>Kin</span></a>
+        <a id="kin-home" class="brand-mark" href="/" aria-label="Kin home"><img src="/kin-mark-tab.png" alt="" /><span>Kin</span></a>
         <div id="tabs" class="tabs" role="tablist">
           <button id="new-tab" class="new-tab" aria-label="New tab">+</button>
         </div>
@@ -45,7 +45,7 @@
           <div id="kin-menu" class="kin-menu hidden" role="menu">
             <button id="smokescreen-button" type="button" role="menuitem"><span class="menu-icon fire-icon">●</span><span><b>Smokescreen</b><small>Clear local data</small></span></button>
             <button id="details-button" type="button" role="menuitem"><span class="menu-icon">◫</span><span><b>Details</b><small>About Kin</small></span></button>
-            <a class="admin-link" role="menuitem" href="https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec?admin=1"><span class="menu-icon">◇</span><span><b>Admin</b><small>Manage access</small></span></a>
+            <button id="admin-button" class="admin-link" type="button" role="menuitem"><span class="menu-icon">◇</span><span><b>Admin</b><small>Manage access</small></span></button>
           </div>
         </div>
         <button id="settings-button" class="tool" aria-label="Preferences">⚙</button>

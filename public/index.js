@@ -40,6 +40,8 @@ const kinMenuButton = document.querySelector("#kin-menu-button");
 const kinMenu = document.querySelector("#kin-menu");
 const smokescreenButton = document.querySelector("#smokescreen-button");
 const detailsButton = document.querySelector("#details-button");
+const adminButton = document.querySelector("#admin-button");
+const adminUrl = "https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec?admin=1";
 
 let bookmarks = readArray("kin-bookmarks");
 let historyEntries = readArray("kin-history");
@@ -124,6 +126,89 @@ function createTab(view = "home") {
   return tab;
 }
 function current() { return tabState.find((tab) => tab.id === selectedId) || tabState[0]; }
+function isWebUrl(value) {
+  try { return ["http:", "https:"].includes(new URL(value).protocol); } catch { return false; }
+}
+function updateTabLocation(tab, value) {
+  if (!tab || !isWebUrl(value)) return;
+  tab.url = value;
+  tab.raw = value;
+  if (tab.id === selectedId) address.value = value;
+  addHistory(value);
+  renderTabs();
+}
+function openKinTab(value = "") {
+  const tab = createTab();
+  selectTab(tab.id);
+  if (value) openAddress(value, tab);
+  else homeAddress.focus();
+  return tab;
+}
+class KinNavigationPlugin extends $runtimekitController.ManagedPlugin {
+  constructor(tab) {
+    super(`kin-navigation-${tab.id}`, []);
+    this.tab = tab;
+  }
+  install(frame) {
+    super.install(frame);
+    this.tap(frame.hooks.init.post, ({ window: frameWindow, client, isTopLevel }) => {
+      if (!isTopLevel) return;
+      const tab = this.tab;
+      const resolveUrl = (value) => {
+        try { return new URL(String(value || ""), client.url.href).href; } catch { return ""; }
+      };
+      const routeToKin = (value, newTab = true) => {
+        const resolved = resolveUrl(value);
+        if (!isWebUrl(resolved)) {
+          if (!resolved || resolved === "about:blank") openKinTab();
+          else showError("That link cannot open in Kin.");
+          return null;
+        }
+        if (newTab) openKinTab(resolved);
+        else openAddress(resolved, tab);
+        return null;
+      };
+
+      const handleLink = (event) => {
+        const link = event.target && typeof event.target.closest === "function" ? event.target.closest("a[href], area[href]") : null;
+        if (!link) return;
+        const href = resolveUrl(link.href || link.getAttribute("href"));
+        const baseTarget = frameWindow.document.querySelector("base[target]")?.getAttribute("target") || "";
+        const target = (link.getAttribute("target") || baseTarget).toLowerCase();
+        const wantsNewTab = event.button === 1 || event.ctrlKey || event.metaKey || event.shiftKey || (target && target !== "_self");
+        if (wantsNewTab) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          routeToKin(href, true);
+        } else if (isWebUrl(href)) {
+          updateTabLocation(tab, href);
+        } else if (href && !href.startsWith("#")) {
+          event.preventDefault();
+          showError("That link cannot open in Kin.");
+        }
+      };
+      frameWindow.document.addEventListener("click", handleLink, true);
+      frameWindow.document.addEventListener("auxclick", handleLink, true);
+
+      frameWindow.document.addEventListener("submit", (event) => {
+        const form = event.target;
+        if (!(form instanceof frameWindow.HTMLFormElement)) return;
+        const baseTarget = frameWindow.document.querySelector("base[target]")?.getAttribute("target") || "";
+        const target = (form.getAttribute("target") || baseTarget).toLowerCase();
+        if (target && target !== "_self") form.setAttribute("target", "_self");
+      }, true);
+
+      const kinOpen = (value) => routeToKin(value, true);
+      try { Object.defineProperty(frameWindow, "open", { configurable: true, writable: true, value: kinOpen }); }
+      catch { try { frameWindow.open = kinOpen; } catch {} }
+
+      updateTabLocation(tab, client.url.href);
+      this.tap(client.hooks.lifecycle.navigate, (_event, navigation) => {
+        updateTabLocation(tab, navigation?.url || client.url.href);
+      });
+    });
+  }
+}
 function renderTabs() {
   tabsNode.querySelectorAll(".tab").forEach((node) => node.remove());
   tabState.forEach((tab) => {
@@ -170,15 +255,15 @@ function showError(message, detail = "") {
   errorCode.textContent = detail;
   setTimeout(() => error.classList.remove("show"), 6000);
 }
-async function openAddress(raw) {
+async function openAddress(raw, targetTab = current()) {
   const url = normalize(raw);
   if (!url) return;
-  const tab = current(); tab.url = url; tab.raw = raw; addHistory(url);
+  const tab = targetTab; tab.url = url; tab.raw = raw; addHistory(url);
   try {
     const controller = await bonfireController;
     if (!tab.frame) {
       const iframe = document.createElement("iframe"); iframe.className = "kin-frame";
-      tab.frame = controller.createFrame(iframe); frameHost.appendChild(iframe);
+      tab.frame = controller.createFrame(iframe, { plugins: [new KinNavigationPlugin(tab)] }); frameHost.appendChild(iframe);
     }
     tab.view = "browser"; tab.frame.go(url); selectTab(tab.id);
   } catch (cause) { showError("Kin could not open that page.", String(cause)); }
@@ -260,7 +345,13 @@ async function loadIdentity() {
 
 form.onsubmit = (event) => { event.preventDefault(); openAddress(address.value); };
 homeForm.onsubmit = (event) => { event.preventDefault(); openAddress(homeAddress.value); };
-newTab.onclick = () => { const tab = createTab(); selectTab(tab.id); homeAddress.focus(); };
+newTab.onclick = () => openKinTab();
+document.querySelector("#kin-home").onclick = (event) => {
+  event.preventDefault();
+  const tab = current();
+  tab.view = "home"; tab.url = ""; tab.raw = "";
+  selectTab(tab.id); homeAddress.focus();
+};
 document.querySelector("#back").onclick = () => { const tab = current(); if (tab.view === "browser" && tab.frame) tab.frame.back(); };
 document.querySelector("#forward").onclick = () => { const tab = current(); if (tab.view === "browser" && tab.frame) tab.frame.forward(); };
 document.querySelector("#reload").onclick = () => { const tab = current(); if (tab.view === "browser" && tab.frame) tab.frame.reload(); };
@@ -278,6 +369,7 @@ document.addEventListener("click", closeKinMenu);
 document.addEventListener("keydown", (event) => { if (event.key === "Escape") { closeKinMenu(); closeModal(); } });
 detailsButton.onclick = () => { closeKinMenu(); openModal("details-modal"); };
 smokescreenButton.onclick = burnHistory;
+adminButton.onclick = () => { closeKinMenu(); openAddress(adminUrl); };
 
 document.querySelectorAll("[data-theme]").forEach((button) => button.onclick = () => {
   appearance.theme = button.dataset.theme; appearance.background = themeDefaults[appearance.theme].background; appearance.accent = themeDefaults[appearance.theme].accent; applyAppearance();
