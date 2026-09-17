@@ -3,7 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { fileURLToPath } from "url";
 import { hostname } from "node:os";
 import { server as relayEngine, logging } from "@mercuryworkshop/wisp-js/server";
-import Fastify from "fastify";
+import Fastify, { LogController } from "fastify";
 import fastifyStatic from "@fastify/static";
 
 const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
@@ -63,6 +63,8 @@ Object.assign(relayEngine.options, {
 });
 
 const fastify = Fastify({
+	logger: false,
+	logController: new LogController({ disableRequestLogging: true }),
 	serverFactory: (handler) => {
 		return createServer()
 			.on("request", (req, res) => {
@@ -75,6 +77,14 @@ const fastify = Fastify({
 				else socket.end();
 			});
 	},
+});
+
+fastify.addHook("onSend", async (_request, reply, payload) => {
+	reply.header("Cache-Control", "private, no-store");
+	reply.header("Pragma", "no-cache");
+	reply.header("Referrer-Policy", "no-referrer");
+	reply.header("X-Robots-Tag", "noindex, nofollow, noarchive");
+	return payload;
 });
 
 fastify.addHook("onRequest", async (request, reply) => {

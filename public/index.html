@@ -16,6 +16,7 @@
   <script src="/clients/httpengine-client.js"></script>
   <script src="/register-sw.js" defer></script>
   <script src="/search.js" defer></script>
+  <script src="/kin-codec.js" defer></script>
   <script src="/index.js" defer></script>
 </head>
 <body>
@@ -34,7 +35,7 @@
         <button id="reload" class="tool reload" aria-label="Reload">↻</button>
         <form id="kin-form" class="omnibox">
           <span class="search-icon">⌕</span>
-          <input id="kin-address" autocomplete="off" placeholder="Search or enter an address" aria-label="Search or enter an address" />
+          <input id="kin-address" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Search or enter an address" aria-label="Search or enter an address" />
           <input id="kin-search-engine" value="https://www.bing.com/search?q=%s" type="hidden" />
           <span class="verified">Kin</span>
         </form>
@@ -65,7 +66,7 @@
           <p class="hero-copy">Search or enter a website.</p>
           <form id="home-form" class="home-search">
             <span>⌕</span>
-            <input id="home-address" autocomplete="off" placeholder="Search with Bing or enter an address" aria-label="Search the web" />
+            <input id="home-address" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Search with Bing or enter an address" aria-label="Search the web" />
             <button type="submit">Go</button>
           </form>
           <div class="hero-meta"><span id="engine-label">Bing</span><i></i><span>Verified</span><i></i><button id="customize-shortcut" type="button">Customize</button></div>
@@ -133,8 +134,8 @@
     <section id="details-modal" class="modal details-modal hidden" role="dialog" aria-modal="true" aria-labelledby="details-title">
       <header><div><small>Kin browser</small><h2 id="details-title">Built for the everyday web</h2></div><button class="close-modal" aria-label="Close">×</button></header>
       <p class="details-intro">Kin is a browser-style web workspace with tabs, local bookmarks, local history controls, customizable search, and an FCPS access gate.</p>
-      <div class="spec-grid"><div><small>ENGINE</small><b>Bonfire v1.5</b><span>Kin's custom proxy runtime</span></div><div><small>SEARCH</small><b>Choice of engine</b><span>Bing, Google, Brave, or DuckDuckGo</span></div><div><small>YOUR DATA</small><b>Stored on this device</b><span>Bookmarks, history, themes, and preferences are kept locally</span></div><div><small>ACCESS</small><b>FCPS verified</b><span>Account access is handled through Kin's verification gate</span></div></div>
-      <div class="engine-note"><b>About the engine</b><p>Bonfire v1.5 is Kin's custom web engine. It handles page rewriting, loading, navigation, cookies, and links while Kin provides the browser interface, tabs, search, bookmarks, history, and appearance controls. External links and popup requests are routed through Kin's own tab system so browsing stays inside the Kin interface.</p></div>
+      <div class="spec-grid"><div><small>ENGINE</small><b>Bonfire v1.5</b><span>Kin's custom web runtime</span></div><div><small>SEARCH</small><b>Choice of engine</b><span>Bing, Google, Brave, or DuckDuckGo</span></div><div><small>YOUR DATA</small><b>Encrypted on this device</b><span>History is encrypted locally; bookmarks, themes, and preferences stay on this device</span></div><div><small>ACCESS</small><b>FCPS verified</b><span>Account access is handled through Kin's verification gate</span></div></div>
+      <div class="engine-note"><b>About the engine</b><p>Bonfire v1.5 is Kin's custom web engine. It handles page loading, navigation, cookies, and links while Kin provides the browser interface, tabs, search, bookmarks, history, and appearance controls. Kin does not upload browsing history; history is encrypted on this device.</p></div>
     </section>
   </div>
   <button id="fullscreen-exit" class="fullscreen-exit" type="button" aria-label="Exit fullscreen"><span>×</span><small>Exit fullscreen</small></button>

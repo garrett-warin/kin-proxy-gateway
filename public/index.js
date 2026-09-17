@@ -47,7 +47,8 @@ const adminButton = document.querySelector("#admin-button");
 const adminUrl = "https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec?admin=1";
 
 let bookmarks = readArray("kin-bookmarks");
-let historyEntries = readArray("kin-history");
+let historyEntries = [];
+let historyReady = Promise.resolve();
 let engineKey = localStorage.getItem("kin-search-engine") || "bing";
 let showStarters = localStorage.getItem("kin-show-starters") !== "false";
 let appearance = readObject("kin-appearance", { theme: "fire", background: "embers", accent: "#ff7a36", cursive: false, cloak: "kin" });
@@ -74,6 +75,7 @@ async function initBonfire() {
   config.runtimekitPath = "/runtime/runtimekit.js";
   config.wasmPath = "/runtime/runtimekit.wasm";
   config.injectPath = "/controller/controller.inject.js";
+  config.codec = KinPathCodec;
   const controller = new Controller({ serviceworker: worker, transport });
   await controller.wait();
   return controller;
@@ -84,6 +86,63 @@ function readArray(key) {
 }
 function readObject(key, fallback) {
   try { const value = JSON.parse(localStorage.getItem(key) || "null"); return value && typeof value === "object" && !Array.isArray(value) ? { ...fallback, ...value } : { ...fallback }; } catch { return { ...fallback }; }
+}
+function bytesToBase64(bytes) {
+  let value = "";
+  bytes.forEach((byte) => { value += String.fromCharCode(byte); });
+  return btoa(value);
+}
+function base64ToBytes(value) {
+  const decoded = atob(value);
+  return Uint8Array.from(decoded, (character) => character.charCodeAt(0));
+}
+function openPrivateState() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("kin-private-state", 1);
+    request.onupgradeneeded = () => request.result.createObjectStore("keys");
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("Private storage is unavailable"));
+  });
+}
+function databaseRequest(request) {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("Private storage request failed"));
+  });
+}
+async function historyKey() {
+  const database = await openPrivateState();
+  const stored = await databaseRequest(database.transaction("keys", "readonly").objectStore("keys").get("history-v1"));
+  if (stored) return stored;
+  const key = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  await databaseRequest(database.transaction("keys", "readwrite").objectStore("keys").put(key, "history-v1"));
+  return key;
+}
+async function persistHistory() {
+  if (!historyEntries.length) { localStorage.removeItem("kin-history-v2"); return; }
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const content = new TextEncoder().encode(JSON.stringify(historyEntries));
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: new TextEncoder().encode("kin-history-v1") }, await historyKey(), content);
+  localStorage.setItem("kin-history-v2", JSON.stringify({ iv: bytesToBase64(iv), data: bytesToBase64(new Uint8Array(encrypted)) }));
+}
+async function initializeHistory() {
+  const legacy = readArray("kin-history");
+  const stored = readObject("kin-history-v2", null);
+  try {
+    if (stored?.iv && stored?.data) {
+      const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: base64ToBytes(stored.iv), additionalData: new TextEncoder().encode("kin-history-v1") }, await historyKey(), base64ToBytes(stored.data));
+      const parsed = JSON.parse(new TextDecoder().decode(decrypted));
+      historyEntries = Array.isArray(parsed) ? parsed : [];
+    } else {
+      historyEntries = legacy;
+      if (legacy.length) await persistHistory();
+    }
+  } catch {
+    historyEntries = [];
+    localStorage.removeItem("kin-history-v2");
+  }
+  localStorage.removeItem("kin-history");
+  renderHistory();
 }
 function host(url) { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return "New tab"; } }
 function normalize(value) {
@@ -326,9 +385,11 @@ function renderBookmarks() {
   grid(document.querySelector("#bookmark-grid"), showStarters ? all : bookmarks);
   grid(document.querySelector("#all-bookmarks"), all);
 }
-function addHistory(url) {
+async function addHistory(url) {
+  await historyReady;
   historyEntries = [{ url, time: Date.now() }, ...historyEntries.filter((entry) => entry.url !== url)].slice(0, 100);
-  localStorage.setItem("kin-history", JSON.stringify(historyEntries)); renderHistory();
+  try { await persistHistory(); } catch {}
+  renderHistory();
 }
 function renderHistory() {
   const list = document.querySelector("#history-list");
@@ -455,7 +516,7 @@ document.querySelector("#bookmark-modal").onsubmit = (event) => {
   event.target.reset(); closeModal(); renderBookmarks();
 };
 document.querySelector("#history-button").onclick = () => { closeModal(); const tab = createTab("history"); selectTab(tab.id); };
-document.querySelector("#clear-history").onclick = () => { historyEntries = []; localStorage.removeItem("kin-history"); renderHistory(); };
+document.querySelector("#clear-history").onclick = async () => { await historyReady; historyEntries = []; localStorage.removeItem("kin-history-v2"); renderHistory(); };
 
 async function burnHistory() {
   closeKinMenu();
@@ -476,5 +537,6 @@ async function burnHistory() {
 
 document.querySelector("#show-starters").checked = showStarters;
 applyAppearance(false); setEngine(engineKey); setOnboardingStep(0);
+historyReady = initializeHistory();
 const first = createTab(); selectedId = first.id;
-selectTab(selectedId); renderBookmarks(); renderHistory(); loadIdentity();
+selectTab(selectedId); renderBookmarks(); loadIdentity();

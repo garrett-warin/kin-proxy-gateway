@@ -44,6 +44,13 @@ The public client connects through `/relay/`. Run `npm run verify:surface`
 before deployment to verify the pinned runtime hashes and ensure internal
 implementation identifiers are absent from every browser-delivered asset.
 
+Searches, typed addresses, rewritten links, redirects, and form destinations
+are stored in Bonfire routes with Kin's URL-safe obfuscation codec. Bonfire's
+request controller decodes each destination immediately before it is sent to
+the relay. This keeps destination text out of the browser-visible route, but it
+is not encryption and does not hide the destination from the gateway or the
+destination server.
+
 ## License
 
 See [LICENSE](./LICENSE) and [public/credits.html](./public/credits.html).

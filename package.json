@@ -1,7 +1,7 @@
 {
 	"name": "kin-bonfire-gateway",
 	"version": "2.0.0",
-	"description": "Kin browser gateway powered by the Bonfire proxy engine.",
+	"description": "Kin browser gateway powered by the Bonfire web engine.",
 	"type": "module",
 	"engines": {
 		"npm": ">=7.0.0",
@@ -9,13 +9,15 @@
 	},
 	"scripts": {
 		"start": "node src/index.js",
+		"test": "node --test test/*.test.js",
 		"verify:surface": "node scripts/verify-public-surface.mjs",
 		"format": "prettier --write .",
 		"lint": "eslint ./src/",
 		"lint:fix": "eslint ./src/ --fix"
 	},
 	"keywords": [
-		"proxy"
+		"browser",
+		"bonfire"
 	],
 	"author": "Mercury Workshop",
 	"license": "GNU AFFERO",
