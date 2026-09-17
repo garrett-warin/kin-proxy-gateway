@@ -19,10 +19,10 @@ const themeDefaults = {
   midnight: { background: "ash", accent: "#54b8ff" },
 };
 const cloakPresets = {
-  kin: { title: "Kin", color: "#ff7a36", letter: "K", nativeIcon: true },
-  schoology: { title: "Home | Schoology", color: "#1677c8", letter: "S" },
-  drive: { title: "My Drive - Google Drive", color: "#159455", letter: "D" },
-  classroom: { title: "Classes", color: "#1e8e5a", letter: "C" },
+  kin: { title: "Kin", icon: "/kin-mark-tab.png" },
+  schoology: { title: "Home | Schoology", icon: "/cloak-schoology.png" },
+  drive: { title: "My Drive - Google Drive", icon: "/cloak-drive.png" },
+  studentvue: { title: "StudentVUE", icon: "/cloak-studentvue.png" },
   blank: { title: "New Tab", color: "#74787f", letter: "●" },
 };
 
@@ -54,6 +54,7 @@ let onboardingStep = 0;
 const tabState = [];
 
 if (!engines[engineKey]) engineKey = "bing";
+if (appearance.cloak === "classroom") appearance.cloak = "studentvue";
 if (localStorage.getItem("kin-search-engine") === "google" && !localStorage.getItem("kin-bing-default-v1")) engineKey = "bing";
 localStorage.setItem("kin-bing-default-v1", "1");
 
@@ -100,7 +101,7 @@ function faviconData(color, letter) {
 function applyCloak(key) {
   const preset = cloakPresets[key] || cloakPresets.kin;
   document.title = preset.title;
-  document.querySelector('link[rel="icon"]').href = preset.nativeIcon ? "/kin-mark-tab.png" : faviconData(preset.color, preset.letter);
+  document.querySelector('link[rel="icon"]').href = preset.icon || faviconData(preset.color, preset.letter);
 }
 function applyAppearance(save = true) {
   if (!themeDefaults[appearance.theme]) appearance.theme = "fire";
@@ -116,7 +117,7 @@ function applyAppearance(save = true) {
   document.querySelectorAll("[data-accent]").forEach((button) => button.classList.toggle("active", button.dataset.accent.toLowerCase() === appearance.accent.toLowerCase()));
   document.querySelector("#custom-accent").value = appearance.accent;
   document.querySelector("#cursive-toggle").checked = Boolean(appearance.cursive);
-  document.querySelector("#cloak-select").value = cloakPresets[appearance.cloak] ? appearance.cloak : "kin";
+  document.querySelectorAll("[data-cloak]").forEach((button) => button.classList.toggle("active", button.dataset.cloak === appearance.cloak));
   if (save) localStorage.setItem("kin-appearance", JSON.stringify(appearance));
 }
 
@@ -378,7 +379,7 @@ document.querySelectorAll("[data-background]").forEach((button) => button.onclic
 document.querySelectorAll("[data-accent]").forEach((button) => button.onclick = () => { appearance.accent = button.dataset.accent; applyAppearance(); });
 document.querySelector("#custom-accent").oninput = (event) => { appearance.accent = event.target.value; applyAppearance(); };
 document.querySelector("#cursive-toggle").onchange = (event) => { appearance.cursive = event.target.checked; applyAppearance(); };
-document.querySelector("#cloak-select").onchange = (event) => { appearance.cloak = event.target.value; applyAppearance(); };
+document.querySelectorAll("[data-cloak]").forEach((button) => button.onclick = () => { appearance.cloak = button.dataset.cloak; applyAppearance(); });
 document.querySelector("#reset-appearance").onclick = () => { appearance = { theme: "fire", background: "embers", accent: "#ff7a36", cursive: false, cloak: "kin" }; applyAppearance(); };
 document.querySelectorAll("[data-onboard-theme]").forEach((button) => button.onclick = () => {
   appearance.theme = button.dataset.onboardTheme; appearance.background = themeDefaults[appearance.theme].background; appearance.accent = themeDefaults[appearance.theme].accent;

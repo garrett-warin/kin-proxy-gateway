@@ -48,7 +48,9 @@
             <button id="admin-button" class="admin-link" type="button" role="menuitem"><span class="menu-icon">◇</span><span><b>Admin</b><small>Manage access</small></span></button>
           </div>
         </div>
-        <button id="settings-button" class="tool" aria-label="Preferences">⚙</button>
+        <button id="settings-button" class="tool settings-tool" aria-label="Preferences">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.25A3.75 3.75 0 1 0 12 15.75 3.75 3.75 0 0 0 12 8.25Z"/><path d="M19.1 13.7a7.9 7.9 0 0 0 .05-1.7 7.9 7.9 0 0 0-.05-1.7l1.8-1.4-2-3.45-2.12.86a8.3 8.3 0 0 0-2.95-1.7L13.5 2.35h-4l-.33 2.26a8.3 8.3 0 0 0-2.95 1.7L4.1 5.45l-2 3.45 1.8 1.4a7.9 7.9 0 0 0-.05 1.7 7.9 7.9 0 0 0 .05 1.7l-1.8 1.4 2 3.45 2.12-.86a8.3 8.3 0 0 0 2.95 1.7l.33 2.26h4l.33-2.26a8.3 8.3 0 0 0 2.95-1.7l2.12.86 2-3.45-1.8-1.4Z"/></svg>
+        </button>
       </div>
     </header>
 
@@ -107,8 +109,14 @@
         <section class="setting-section"><div class="setting-heading"><div><small>Appearance</small><h3>Accent color</h3></div><label class="custom-color">Custom <input id="custom-accent" type="color" value="#ff7a36" /></label></div><div id="accent-presets" class="accent-presets"><button type="button" data-accent="#ff7a36" style="--swatch:#ff7a36" aria-label="Orange"></button><button type="button" data-accent="#f2b84b" style="--swatch:#f2b84b" aria-label="Gold"></button><button type="button" data-accent="#e7564a" style="--swatch:#e7564a" aria-label="Red"></button><button type="button" data-accent="#c886ff" style="--swatch:#c886ff" aria-label="Violet"></button><button type="button" data-accent="#54b8ff" style="--swatch:#54b8ff" aria-label="Blue"></button></div></section>
         <section class="setting-section compact-settings">
           <label class="field"><span>Search engine</span><select id="engine-select"><option value="bing">Bing</option><option value="google">Google</option><option value="duckduckgo">DuckDuckGo</option><option value="brave">Brave Search</option></select></label>
-          <label class="field"><span>Tab appearance</span><select id="cloak-select"><option value="kin">Kin</option><option value="schoology">Home | Schoology</option><option value="drive">My Drive - Google Drive</option><option value="classroom">Classes</option><option value="blank">New Tab</option></select></label>
         </section>
+        <section class="setting-section"><div class="setting-heading"><div><small>Privacy</small><h3>Tab cloaking</h3></div><span>Saved on this device</span></div><div id="cloak-presets" class="cloak-presets">
+          <button type="button" data-cloak="kin"><img src="/kin-mark-tab.png" alt="" /><span><b>Kin</b><small>Kin</small></span></button>
+          <button type="button" data-cloak="schoology"><img src="/cloak-schoology.png" alt="" /><span><b>Schoology</b><small>Home | Schoology</small></span></button>
+          <button type="button" data-cloak="drive"><img src="/cloak-drive.png" alt="" /><span><b>Google Drive</b><small>My Drive - Google Drive</small></span></button>
+          <button type="button" data-cloak="studentvue"><img src="/cloak-studentvue.png" alt="" /><span><b>StudentVUE</b><small>StudentVUE</small></span></button>
+          <button type="button" data-cloak="blank"><i aria-hidden="true"></i><span><b>New Tab</b><small>New Tab</small></span></button>
+        </div></section>
         <label class="toggle-row"><span><b>Cursive headings</b><small>Use handwritten headings.</small></span><input id="cursive-toggle" type="checkbox" /></label>
         <label class="toggle-row"><span><b>Starter bookmarks</b><small>Show suggested websites.</small></span><input id="show-starters" type="checkbox" checked /></label>
       </div>

@@ -84,6 +84,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
   border-top: 1px solid #28211c;
 }
 .tool { width: 36px; height: 36px; flex: 0 0 auto; border-radius: 10px; font-size: 22px; }
+.settings-tool { display: grid; place-items: center; }
+.settings-tool svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .reload { font-size: 18px; }
 .omnibox {
   height: 40px;
@@ -327,6 +329,7 @@ body[data-background="paper"] .start-page { background-color: var(--surface-0); 
 .start-page::before { display: none; }
 
 .hero { position: relative; padding-top: 6px; }
+.hero::before { content: ""; display: block; width: 44px; height: 3px; margin: 0 auto 18px; border-radius: 99px; background: var(--accent); box-shadow: -54px 0 0 rgba(var(--accent-rgb),.18), 54px 0 0 rgba(var(--accent-rgb),.18); }
 .hero-mark { width: 58px; height: 58px; display: grid; place-items: center; margin: 0 auto -9px; border: 1px solid rgba(var(--accent-rgb), .36); border-radius: 19px; background: color-mix(in srgb, var(--surface-2) 86%, var(--accent)); box-shadow: 0 18px 50px rgba(var(--accent-rgb), .12); transform: rotate(-4deg); }
 .hero-mark img { width: 42px; height: 42px; object-fit: contain; transform: rotate(4deg); }
 .wordmark { width: 250px; height: 112px; margin-bottom: -4px; }
@@ -343,6 +346,8 @@ body[data-background="paper"] .start-page { background-color: var(--surface-0); 
 .quick-access { margin-top: 48px; border-top-color: color-mix(in srgb, var(--accent) 16%, var(--surface-3)); }
 .bookmark-card { background: color-mix(in srgb, var(--surface-1) 92%, transparent); border-color: color-mix(in srgb, var(--accent) 14%, var(--surface-3)); }
 .bookmark-card:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--surface-3)); background: var(--surface-2); }
+.quick-access { position: relative; }
+.quick-access::before { content: ""; position: absolute; top: -1px; left: 0; width: 78px; height: 2px; background: var(--accent); }
 .bookmark-icon { border-color: rgba(var(--accent-rgb), .25); background: rgba(var(--accent-rgb), .09); color: var(--accent); }
 
 .settings-modal { width: min(100%, 720px); max-height: min(88vh, 820px); padding: 0; overflow: hidden; }
@@ -380,6 +385,15 @@ body[data-background="paper"] .start-page { background-color: var(--surface-0); 
 .custom-color input { width: 29px; height: 29px; border: 0; border-radius: 50%; background: transparent; padding: 0; }
 .compact-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .compact-settings .field { margin: 0; }
+.cloak-presets { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 9px; }
+.cloak-presets button { min-width: 0; display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-1); color: var(--copy); padding: 10px; text-align: left; cursor: pointer; }
+.cloak-presets button:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--surface-3)); background: var(--surface-2); }
+.cloak-presets button.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb),.22); }
+.cloak-presets img, .cloak-presets i { width: 28px; height: 28px; flex: 0 0 auto; object-fit: contain; }
+.cloak-presets i { border-radius: 7px; background: #74787f; }
+.cloak-presets b, .cloak-presets small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cloak-presets b { font-size: 11px; }
+.cloak-presets small { margin-top: 3px; color: var(--copy-muted); font-size: 8px; }
 .settings-actions { margin: 0; padding: 16px 24px; border-top: 1px solid var(--line); background: var(--surface-2); }
 .settings-actions .primary { width: auto; min-width: 72px; min-height: 38px; padding: 0 15px; border-radius: 9px; font-size: 13px; }
 
@@ -415,6 +429,7 @@ body[data-theme="parchment"] .tab:hover, body[data-theme="parchment"] .kin-menu 
   .brand-mark span { display:none; }
   .preset-grid, .background-presets { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .compact-settings { grid-template-columns: 1fr; }
+  .cloak-presets { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .settings-modal { max-height: 94vh; }
   .settings-scroll { max-height: calc(94vh - 154px); }
   .onboarding-card { min-height: 520px; padding: 22px; }
