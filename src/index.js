@@ -34,6 +34,25 @@ function cookieValue(header, name) {
 	return String(header || "").split(";").map((part) => part.trim()).find((part) => part.startsWith(`${name}=`))?.slice(name.length + 1) || "";
 }
 
+function trustedPublicOrigin(request) {
+	const candidates = [
+		request.headers["x-kin-public-origin"],
+		request.headers["x-forwarded-host"],
+		request.headers.host,
+	];
+	for (const candidate of candidates) {
+		if (!candidate) continue;
+		const raw = String(candidate).split(",")[0].trim();
+		try {
+			const parsed = new URL(raw.includes("://") ? raw : `https://${raw}`);
+			const hostname = parsed.hostname.toLowerCase();
+			const trusted = /^[a-z0-9-]+\.cloudfront\.net$/.test(hostname) || hostname === "kinfire-gateway-garrett.fly.dev";
+			if (parsed.protocol === "https:" && trusted) return parsed.origin;
+		} catch {}
+	}
+	return "https://kinfire-gateway-garrett.fly.dev";
+}
+
 // Internal relay configuration. Browser-facing routes and assets use Kin names.
 
 logging.set_level(logging.NONE);
@@ -72,7 +91,9 @@ fastify.addHook("onRequest", async (request, reply) => {
 		// The main Kin address is the friendly entry point. Authentication happens
 		// in the FCPS Apps Script Web App before it redirects back with a token.
 		if (url.pathname === "/" && (request.method === "GET" || request.method === "HEAD")) {
-			return reply.redirect(accessGateUrl, 302);
+			const gate = new URL(accessGateUrl);
+			gate.searchParams.set("return_origin", trustedPublicOrigin(request));
+			return reply.redirect(gate.toString(), 302);
 		}
 		return reply.code(403).type("text/html").send("<h1>Kin access required</h1><p>Start from the FCPS Kin page to continue.</p>");
 	}

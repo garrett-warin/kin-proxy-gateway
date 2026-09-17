@@ -45,6 +45,8 @@
           <div id="kin-menu" class="kin-menu hidden" role="menu">
             <button id="smokescreen-button" type="button" role="menuitem"><span class="menu-icon fire-icon">●</span><span><b>Smokescreen</b><small>Clear local data</small></span></button>
             <button id="details-button" type="button" role="menuitem"><span class="menu-icon">◫</span><span><b>Details</b><small>About Kin</small></span></button>
+            <button id="about-blank-button" type="button" role="menuitem"><span class="menu-icon">↗</span><span><b>Open in about:blank</b><small>Launch Kin in a blank tab</small></span></button>
+            <button id="fullscreen-button" type="button" role="menuitem"><span class="menu-icon">⛶</span><span><b>Fullscreen</b><small>Hide the Kin browser bar</small></span></button>
             <button id="admin-button" class="admin-link" type="button" role="menuitem"><span class="menu-icon">◇</span><span><b>Admin</b><small>Manage access</small></span></button>
           </div>
         </div>
@@ -135,6 +137,7 @@
       <div class="engine-note"><b>About the engine</b><p>Bonfire v1.5 is Kin's custom web engine. It handles page rewriting, loading, navigation, cookies, and links while Kin provides the browser interface, tabs, search, bookmarks, history, and appearance controls. External links and popup requests are routed through Kin's own tab system so browsing stays inside the Kin interface.</p></div>
     </section>
   </div>
+  <button id="fullscreen-exit" class="fullscreen-exit" type="button" aria-label="Exit fullscreen"><span>×</span><small>Exit fullscreen</small></button>
   <div id="onboarding" class="onboarding hidden" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
     <div class="onboarding-card">
       <div class="onboarding-brand"><img src="/kin-mark-tab.png" alt="" /><span>Kin</span></div>

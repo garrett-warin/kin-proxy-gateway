@@ -40,6 +40,9 @@ const kinMenuButton = document.querySelector("#kin-menu-button");
 const kinMenu = document.querySelector("#kin-menu");
 const smokescreenButton = document.querySelector("#smokescreen-button");
 const detailsButton = document.querySelector("#details-button");
+const aboutBlankButton = document.querySelector("#about-blank-button");
+const fullscreenButton = document.querySelector("#fullscreen-button");
+const fullscreenExit = document.querySelector("#fullscreen-exit");
 const adminButton = document.querySelector("#admin-button");
 const adminUrl = "https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec?admin=1";
 
@@ -102,6 +105,54 @@ function applyCloak(key) {
   const preset = cloakPresets[key] || cloakPresets.kin;
   document.title = preset.title;
   document.querySelector('link[rel="icon"]').href = preset.icon || faviconData(preset.color, preset.letter);
+}
+
+function launchAboutBlank() {
+  closeKinMenu();
+  const popup = window.open("about:blank", "_blank");
+  if (!popup) { showError("Kin could not open a blank tab. Allow popups and try again."); return; }
+  const doc = popup.document;
+  doc.title = document.title;
+  const icon = doc.createElement("link");
+  icon.rel = "icon";
+  icon.href = document.querySelector('link[rel="icon"]').href;
+  const viewport = doc.createElement("meta");
+  viewport.name = "viewport";
+  viewport.content = "width=device-width,initial-scale=1";
+  const frame = doc.createElement("iframe");
+  frame.src = location.href;
+  frame.title = "Kin";
+  frame.allow = "fullscreen";
+  frame.style.cssText = "position:fixed;inset:0;width:100%;height:100%;border:0;background:#111";
+  doc.head.append(icon, viewport);
+  doc.body.style.cssText = "margin:0;overflow:hidden;background:#111";
+  doc.body.appendChild(frame);
+  popup.opener = null;
+}
+
+let fullscreenUiTimer;
+function revealFullscreenUi() {
+  if (!document.fullscreenElement) return;
+  document.body.classList.add("show-fullscreen-ui");
+  clearTimeout(fullscreenUiTimer);
+  fullscreenUiTimer = setTimeout(() => document.body.classList.remove("show-fullscreen-ui"), 1800);
+}
+async function toggleFullscreen() {
+  closeKinMenu();
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else if (document.fullscreenEnabled) await document.documentElement.requestFullscreen();
+    else showError("Fullscreen is not available in this browser.");
+  } catch { showError("Kin could not enter fullscreen."); }
+}
+function syncFullscreenUi() {
+  const active = Boolean(document.fullscreenElement);
+  document.body.classList.toggle("kin-fullscreen", active);
+  document.body.classList.toggle("show-fullscreen-ui", active);
+  fullscreenButton.querySelector("b").textContent = active ? "Exit fullscreen" : "Fullscreen";
+  fullscreenButton.querySelector("small").textContent = active ? "Show the Kin browser bar" : "Hide the Kin browser bar";
+  if (active) revealFullscreenUi();
+  else clearTimeout(fullscreenUiTimer);
 }
 function applyAppearance(save = true) {
   if (!themeDefaults[appearance.theme]) appearance.theme = "fire";
@@ -369,8 +420,13 @@ kinMenu.onclick = (event) => event.stopPropagation();
 document.addEventListener("click", closeKinMenu);
 document.addEventListener("keydown", (event) => { if (event.key === "Escape") { closeKinMenu(); closeModal(); } });
 detailsButton.onclick = () => { closeKinMenu(); openModal("details-modal"); };
+aboutBlankButton.onclick = launchAboutBlank;
+fullscreenButton.onclick = toggleFullscreen;
+fullscreenExit.onclick = toggleFullscreen;
 smokescreenButton.onclick = burnHistory;
 adminButton.onclick = () => { closeKinMenu(); openAddress(adminUrl); };
+document.addEventListener("fullscreenchange", syncFullscreenUi);
+document.addEventListener("mousemove", (event) => { if (document.fullscreenElement && event.clientY <= 14) revealFullscreenUi(); });
 
 document.querySelectorAll("[data-theme]").forEach((button) => button.onclick = () => {
   appearance.theme = button.dataset.theme; appearance.background = themeDefaults[appearance.theme].background; appearance.accent = themeDefaults[appearance.theme].accent; applyAppearance();
