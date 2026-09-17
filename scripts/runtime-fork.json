@@ -1,0 +1,15 @@
+{
+  "source": "https://github.com/paxton-warin/Scramjet-LS-Bypass",
+  "commit": "4f452feec4d6804730b903294d0f9bec8002a635",
+  "packaging": "Kin-neutral browser assets derived from the pinned fork",
+  "assets": {
+    "bootstrap/bootstrap-client.js": "70dbf41d73602eb3e14e7583d024874f8c0435b492d4a84a3f32e6c9c841ff4d",
+    "runtime/runtimekit.js": "2e524d2088a0b3409bbf23759e0921a33e4ff8967dcc048d7d5e1b324ec3df2b",
+    "runtime/runtimekit.wasm": "ab66f90ecb60b6923655d47c2a4b95c5066819a2e5caf0d6798a00f55a148ef7",
+    "runtime/runtimekit-utils.js": "8a4e9e1f6a9605ea8356e32e41abe24ea037d70e1b4ce3520ce96b58801d398f",
+    "controller/controller.api.js": "b3f677a7b614b110b7adebd5d1ebecc14dabbbf1bbe026aede93d006a61e276e",
+    "controller/controller.inject.js": "984fb3413d7db21ede4f6d7340713caf46e39ba53f369e1c15ad1360fba9171c",
+    "controller/controller.worker.js": "881907449549d2f4bda9e59d05e447ef01da9a1c790b7792800fb32074fac1dd",
+    "clients/httpengine-client.js": "d5715222fa1acb7ddb3245e14ace31f8f9e135c232b3e9881ad079c0084cd535"
+  }
+}

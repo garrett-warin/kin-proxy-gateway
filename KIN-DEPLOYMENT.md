@@ -1,6 +1,7 @@
 # Kin FCPS gateway
 
-This is the official Scramjet application with an FCPS access gate added.
+This is the Kin browser gateway powered by the Bonfire engine and protected by
+an FCPS access gate.
 
 Deploy this folder to Koyeb as a Docker application. Add one secret environment
 variable before deployment:
@@ -8,7 +9,7 @@ variable before deployment:
 - `KIN_TOKEN_SECRET` — the value created by `initializeKinService` in the Kin
   Apps Script project.
 
-Every request, including Scramjet's WebSocket transport, requires a valid,
+Every request, including Bonfire's WebSocket transport, requires a valid,
 short-lived signed token. Kin's Apps Script page will redirect approved FCPS
 users to this service with a token once its public Koyeb URL is configured.
 

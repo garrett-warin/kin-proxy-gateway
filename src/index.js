@@ -2,12 +2,9 @@ import { createServer } from "node:http";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { fileURLToPath } from "url";
 import { hostname } from "node:os";
-import { server as wisp, logging } from "@mercuryworkshop/wisp-js/server";
+import { server as relayEngine, logging } from "@mercuryworkshop/wisp-js/server";
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
-
-import { libcurlPath } from "@mercuryworkshop/libcurl-transport";
-import { baremuxPath } from "@mercuryworkshop/bare-mux/node";
 
 const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
 const tokenSecret = process.env.KIN_TOKEN_SECRET;
@@ -37,10 +34,10 @@ function cookieValue(header, name) {
 	return String(header || "").split(";").map((part) => part.trim()).find((part) => part.startsWith(`${name}=`))?.slice(name.length + 1) || "";
 }
 
-// Wisp Configuration: Refer to the documentation at https://www.npmjs.com/package/@mercuryworkshop/wisp-js
+// Internal relay configuration. Browser-facing routes and assets use Kin names.
 
 logging.set_level(logging.NONE);
-Object.assign(wisp.options, {
+Object.assign(relayEngine.options, {
 	allow_udp_streams: false,
 	hostname_blacklist: [/example\.com/],
 	dns_servers: ["1.1.1.3", "1.0.0.3"],
@@ -55,7 +52,7 @@ const fastify = Fastify({
 				handler(req, res);
 			})
 			.on("upgrade", (req, socket, head) => {
-				if (req.url.endsWith("/wisp/") && verifyKinToken(cookieValue(req.headers.cookie, "kin_session"))) wisp.routeRequest(req, socket, head);
+				if (req.url.endsWith("/relay/") && verifyKinToken(cookieValue(req.headers.cookie, "kin_session"))) relayEngine.routeRequest(req, socket, head);
 				else socket.end();
 			});
 	},
@@ -84,26 +81,6 @@ fastify.addHook("onRequest", async (request, reply) => {
 fastify.register(fastifyStatic, {
 	root: publicPath,
 	decorateReply: true,
-});
-
-fastify.register(fastifyStatic, {
-	// KinFire is served at the legacy Scramjet asset path so the browser shell,
-	// service worker, and engine all load the same runtime build.
-	root: fileURLToPath(new URL("../public/scram/", import.meta.url)),
-	prefix: "/scram/",
-	decorateReply: false,
-});
-
-fastify.register(fastifyStatic, {
-	root: libcurlPath,
-	prefix: "/libcurl/",
-	decorateReply: false,
-});
-
-fastify.register(fastifyStatic, {
-	root: baremuxPath,
-	prefix: "/baremux/",
-	decorateReply: false,
 });
 
 fastify.setNotFoundHandler((res, reply) => {

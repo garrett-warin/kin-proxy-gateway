@@ -1,7 +1,7 @@
 {
-	"name": "Scramjet Demo",
-	"description": "Scramjet Demo App",
-	"repository": "https://github.com/.../Scramjet-Demo",
-	"logo": "https://raw.githubusercontent.com/MercuryWorkshop/scramjet/main/assets/scramjet.png",
-	"keywords": ["scramjet"]
+	"name": "Kin Bonfire Gateway",
+	"description": "Kin's browser-style gateway powered by the Bonfire engine.",
+	"repository": "https://github.com/eee-boop/kin-proxy-gateway",
+	"logo": "https://d2o7c403abev6f.cloudfront.net/kin-mark-tab.png",
+	"keywords": ["kin", "bonfire", "kinfire", "proxy"]
 }

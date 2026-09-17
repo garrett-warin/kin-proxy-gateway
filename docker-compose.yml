@@ -1,12 +1,12 @@
-# TODO: needs to be updated for sj
+# Example container configuration for Kin and Bonfire
 # services:
-#   ultraviolet:
-#     image: diffusehyperion/ultraviolet
-#     container_name: scramjet
+#   kin:
+#     build: .
+#     container_name: kin-bonfire
 #     restart: unless-stopped
 #     ports:
 #       - "8080:8080"
 
 # networks:
 #   default:
-#     name: ultraviolet
+#     name: kin

@@ -10,16 +10,13 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="/kin-mark-tab.png" />
   <link rel="stylesheet" href="/index.css" />
-  <style>body,button,input,select{font-family:"DM Sans",Arial,sans-serif}.burn{height:34px;border:1px solid #84412e;border-radius:9px;background:#2a1715;color:#ffb087;padding:0 11px;font-size:12px;font-weight:700;cursor:pointer}.burn:hover{background:#3a1c17}.burn-overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:rgba(9,9,10,.93);opacity:0;pointer-events:none;transition:opacity .22s}.burn-overlay.active{opacity:1;pointer-events:auto}.burn-flame{font-size:94px;filter:drop-shadow(0 0 24px #ff5c2b);animation:flame .52s ease-in-out infinite alternate}.burn-overlay strong{display:block;margin-top:12px;text-align:center;font-size:22px}@keyframes flame{to{transform:scale(1.13) rotate(4deg);filter:drop-shadow(0 0 48px #ff7d2e)}}.history-list{display:grid;gap:8px;margin-top:18px}.history-entry{display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid #383a40;border-radius:11px;background:#191a1d;padding:13px}.history-entry button{border:0;background:transparent;color:#f5f1eb;text-align:left;cursor:pointer}.history-entry small{color:#929499}</style>
-  <style>.details-button{height:34px;border:1px solid #474950;border-radius:9px;background:transparent;color:#d4d5d7;padding:0 11px;font-size:12px;font-weight:700;cursor:pointer}.details-button:hover{border-color:#80572f;color:#fff}.details-modal{width:min(100%,560px)}.details-intro{margin:0;color:#929499;line-height:1.5;font-size:13px}.spec-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:20px}.spec-grid>div{min-height:93px;border:1px solid #383a40;border-radius:11px;background:#17181b;padding:12px}.spec-grid small,.spec-grid b,.spec-grid span{display:block}.spec-grid small{color:#ce8744;font-size:9px;letter-spacing:.12em}.spec-grid b{margin-top:9px;font-size:13px}.spec-grid span{margin-top:5px;color:#929499;font-size:11px;line-height:1.35}.engine-note{margin-top:12px;border-left:2px solid #f3a04b;padding:3px 0 3px 12px}.engine-note b{font-size:12px}.engine-note p{margin:5px 0 0;color:#929499;font-size:12px;line-height:1.45}@media(max-width:520px){.details-button{display:none}.spec-grid{grid-template-columns:1fr}}</style>
-  <script src="/scram/scramjet.all.js"></script>
-  <script>window.$scramjetLoadController=()=>{const {KinfireController}=window.$kinfireLoadController();return {ScramjetController:KinfireController}}</script>
-  <script src="/baremux/index.js"></script>
+  <script src="/runtime/runtimekit.js"></script>
+  <script src="/controller/controller.api.js"></script>
+  <script src="/runtime/runtimekit-utils.js"></script>
+  <script src="/clients/httpengine-client.js"></script>
   <script src="/register-sw.js" defer></script>
   <script src="/search.js" defer></script>
-  <style>.smokescreen{position:fixed;inset:0;z-index:110;overflow:hidden;pointer-events:none;opacity:0;background:rgba(17,18,20,.12);transition:opacity .25s}.smokescreen.active{opacity:1;pointer-events:auto}.smoke{position:absolute;bottom:-34vh;width:44vw;height:44vw;border-radius:50%;background:radial-gradient(circle,rgba(203,208,214,.48) 0,rgba(116,121,128,.34) 32%,rgba(17,18,20,0) 70%);filter:blur(15px);animation:rise 1.8s cubic-bezier(.2,.7,.2,1) forwards}.smoke.one{left:-12vw;animation-delay:0s}.smoke.two{left:27vw;width:56vw;height:56vw;animation-delay:.14s}.smoke.three{right:-18vw;width:48vw;height:48vw;animation-delay:.05s}@keyframes rise{0%{transform:translateY(12vh) scale(.45);opacity:0}18%{opacity:.92}100%{transform:translateY(-105vh) scale(1.3);opacity:.1}}.local-toast{position:fixed;left:50%;bottom:28px;z-index:120;transform:translate(-50%,16px);opacity:0;pointer-events:none;border:1px solid #4e535b;border-radius:11px;background:#222429;color:#f5f1eb;padding:12px 16px;box-shadow:0 14px 38px rgba(0,0,0,.35);font-size:13px;font-weight:700;transition:opacity .22s,transform .22s}.local-toast.show{opacity:1;transform:translate(-50%,0)}.local-toast small{display:block;margin-top:3px;color:#a2a5aa;font-weight:400;font-size:11px}</style>
   <script src="/index.js" defer></script>
-  <script defer>document.addEventListener('DOMContentLoaded',()=>{document.querySelector('#details-button').onclick=()=>openModal('details-modal');const burn=document.querySelector('#burn-button');burn.textContent='Smokescreen';burn.title='Clear Kin local data';const overlay=document.createElement('div');overlay.className='smokescreen';overlay.innerHTML='<i class="smoke one"></i><i class="smoke two"></i><i class="smoke three"></i>';document.body.append(overlay);const toast=document.createElement('div');toast.className='local-toast';toast.innerHTML='Local data cleared<small>Kin data on this device was removed.</small>';document.body.append(toast);burn.onclick=async()=>{overlay.classList.add('active');try{localStorage.clear();sessionStorage.clear();for(const key of await caches.keys())await caches.delete(key);if(indexedDB.databases)for(const db of await indexedDB.databases())if(db.name)indexedDB.deleteDatabase(db.name)}catch{}setTimeout(()=>{overlay.classList.remove('active');toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),3000)},1850)}})</script>
 </head>
 <body>
   <div class="browser-shell">
@@ -35,15 +32,22 @@
         <button id="back" class="tool" aria-label="Back">‹</button>
         <button id="forward" class="tool" aria-label="Forward">›</button>
         <button id="reload" class="tool reload" aria-label="Reload">↻</button>
-        <form id="sj-form" class="omnibox">
+        <form id="kin-form" class="omnibox">
           <span class="search-icon">⌕</span>
-          <input id="sj-address" autocomplete="off" placeholder="Search or enter an address" aria-label="Search or enter an address" />
-          <input id="sj-search-engine" value="https://www.bing.com/search?q=%s" type="hidden" />
+          <input id="kin-address" autocomplete="off" placeholder="Search or enter an address" aria-label="Search or enter an address" />
+          <input id="kin-search-engine" value="https://www.bing.com/search?q=%s" type="hidden" />
           <span class="verified">Kin</span>
         </form>
-        <button id="burn-button" class="burn" type="button">Burn history</button>
-        <button id="details-button" class="details-button" type="button">Details</button>
-        <a class="admin-link" style="height:32px;display:inline-flex;align-items:center;border:1px solid #474950;border-radius:8px;padding:0 10px;color:#c8aa87;text-decoration:none;font-size:12px;font-weight:700" href="https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec?admin=1">Admin</a>
+        <div class="kin-menu-wrap">
+          <button id="kin-menu-button" class="kin-menu-button" type="button" aria-haspopup="menu" aria-expanded="false">
+            <img src="/kin-mark-tab.png" alt="" /><span>Kin</span><i>⌄</i>
+          </button>
+          <div id="kin-menu" class="kin-menu hidden" role="menu">
+            <button id="smokescreen-button" type="button" role="menuitem"><span class="menu-icon fire-icon">●</span><span><b>Smokescreen</b><small>Clear local browsing data</small></span></button>
+            <button id="details-button" type="button" role="menuitem"><span class="menu-icon">◫</span><span><b>Details</b><small>About Kin and Bonfire</small></span></button>
+            <a class="admin-link" role="menuitem" href="https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec?admin=1"><span class="menu-icon">◇</span><span><b>Admin</b><small>Access controls and users</small></span></a>
+          </div>
+        </div>
         <button id="settings-button" class="tool" aria-label="Preferences">⚙</button>
       </div>
     </header>
@@ -76,8 +80,8 @@
       </section>
 
       <section id="frame-host" class="frame-host" aria-live="polite"></section>
-      <div id="sj-error" class="error" role="alert"></div>
-      <pre id="sj-error-code" hidden></pre>
+      <div id="kin-error" class="error" role="alert"></div>
+      <pre id="kin-error-code" hidden></pre>
     </main>
   </div>
 
@@ -97,11 +101,11 @@
     <section id="details-modal" class="modal details-modal hidden" role="dialog" aria-modal="true" aria-labelledby="details-title">
       <header><div><small>Kin browser</small><h2 id="details-title">Built for the everyday web</h2></div><button class="close-modal" aria-label="Close">×</button></header>
       <p class="details-intro">Kin is a browser-style web workspace with tabs, local bookmarks, local history controls, and an FCPS access gate.</p>
-      <div class="spec-grid"><div><small>ENGINE</small><b>Modified Scramjet</b><span>Web proxy runtime</span></div><div><small>SEARCH</small><b>Choice of engine</b><span>Bing, Google, Brave, or DuckDuckGo</span></div><div><small>YOUR DATA</small><b>Stored on this device</b><span>Bookmarks and history controls live locally</span></div><div><small>ACCESS</small><b>FCPS verified</b><span>Account access is handled through Kin’s gate</span></div></div>
-      <div class="engine-note"><b>About the engine</b><p>Kin uses a modified Scramjet integration for page loading and navigation. Kin provides the browser interface, tabs, search, and local workspace tools around it.</p></div>
+      <div class="spec-grid"><div><small>ENGINE</small><b>Bonfire v1.5</b><span>Kin's current proxy runtime</span></div><div><small>SEARCH</small><b>Choice of engine</b><span>Bing, Google, Brave, or DuckDuckGo</span></div><div><small>YOUR DATA</small><b>Stored on this device</b><span>Bookmarks and history controls live locally</span></div><div><small>ACCESS</small><b>FCPS verified</b><span>Account access is handled through Kin’s gate</span></div></div>
+      <div class="engine-note"><b>About the engine</b><p>Bonfire v1.5 is Kin’s custom fire-powered web engine. It handles page rewriting, loading, and navigation while Kin provides the browser interface, tabs, search, and local workspace tools.</p></div>
     </section>
   </div>
-  <div id="burn-overlay" class="burn-overlay"><div><div class="burn-flame">🔥</div><strong>Burning local history…</strong></div></div>
-  <script>window.addEventListener('load',()=>{const details=document.querySelector('#details-button'),backdrop=document.querySelector('#modal-backdrop'),detailsModal=document.querySelector('#details-modal');details.onclick=()=>{backdrop.classList.remove('hidden');document.querySelectorAll('.modal').forEach(modal=>modal.classList.toggle('hidden',modal!==detailsModal))};const engine=detailsModal.querySelector('.spec-grid>div:first-child');engine.innerHTML='<small>ENGINE</small><b>KinFire v3.4</b><span>A heavily modified Scramjet version</span>';const note=detailsModal.querySelector('.engine-note p');note.textContent='KinFire v3.4 is Kin’s heavily modified Scramjet engine, handling page loading and navigation while Kin provides the browser interface, tabs, search, and local workspace tools.';const burn=document.querySelector('#burn-button'),overlay=document.querySelector('.smokescreen'),toast=document.querySelector('.local-toast');burn.textContent='Smokescreen';burn.onclick=async()=>{overlay.classList.add('active');try{localStorage.clear();sessionStorage.clear();for(const key of await caches.keys())await caches.delete(key);if(indexedDB.databases)for(const db of await indexedDB.databases())if(db.name)indexedDB.deleteDatabase(db.name)}catch{}setTimeout(()=>{overlay.classList.remove('active');toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),3000)},1850)}})</script>
+  <div id="smokescreen" class="smokescreen" aria-hidden="true"><i class="smoke one"></i><i class="smoke two"></i><i class="smoke three"></i></div>
+  <div id="local-toast" class="local-toast" role="status">Local data cleared<small>Kin data on this device was removed.</small></div>
 </body>
 </html>

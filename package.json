@@ -1,7 +1,7 @@
 {
-	"name": "scramjet-demo",
+	"name": "kin-bonfire-gateway",
 	"version": "2.0.0",
-	"description": "The demo application for Scramjet, a high-performance web proxy.",
+	"description": "Kin browser gateway powered by the Bonfire proxy engine.",
 	"type": "module",
 	"engines": {
 		"npm": ">=7.0.0",
@@ -9,6 +9,7 @@
 	},
 	"scripts": {
 		"start": "node src/index.js",
+		"verify:surface": "node scripts/verify-public-surface.mjs",
 		"format": "prettier --write .",
 		"lint": "eslint ./src/",
 		"lint:fix": "eslint ./src/ --fix"
@@ -20,10 +21,7 @@
 	"license": "GNU AFFERO",
 	"dependencies": {
 		"fastify": "^5.7.4",
-		"@fastify/static": "^9.0.0",
-		"@mercuryworkshop/bare-mux": "^2.1.9",
-		"@mercuryworkshop/libcurl-transport": "^1.5.2",
-		"@mercuryworkshop/scramjet": "https://github.com/MercuryWorkshop/scramjet/releases/download/v1.1.0/mercuryworkshop-scramjet-1.1.0.tgz",
+		"@fastify/static": "^10.1.3",
 		"@mercuryworkshop/wisp-js": "^0.4.1",
 		"ws": "^8.18.3"
 	},
@@ -31,5 +29,5 @@
 		"eslint": "^9.13.0",
 		"prettier": "^3.3.3"
 	},
-	"packageManager": "pnpm@10.18.3"
+	"packageManager": "npm@11.6.2"
 }
