@@ -78,6 +78,14 @@ fastify.addHook("onRequest", async (request, reply) => {
 	}
 });
 
+fastify.get("/api/session", async (request, reply) => {
+	const claims = verifyKinToken(cookieValue(request.headers.cookie, "kin_session"));
+	const name = typeof claims?.name === "string" ? claims.name.trim() : "";
+	const fallback = claims?.email?.split("@")[0] || "friend";
+	const firstName = (name || fallback).split(/\s+/)[0].slice(0, 40);
+	return reply.header("Cache-Control", "private, no-store").send({ firstName });
+});
+
 fastify.register(fastifyStatic, {
 	root: publicPath,
 	decorateReply: true,

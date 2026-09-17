@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#1b1c20" />
+  <meta name="theme-color" content="#17120f" />
   <title>Kin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="icon" href="/kin-mark-tab.png" />
   <link rel="stylesheet" href="/index.css" />
   <script src="/runtime/runtimekit.js"></script>
@@ -22,7 +22,7 @@
   <div class="browser-shell">
     <header class="browser-chrome">
       <div class="tab-strip">
-        <a class="brand-mark" href="/" aria-label="Kin home"><img src="/kin-mark-tab.png" alt="" /></a>
+        <a class="brand-mark" href="/" aria-label="Kin home"><img src="/kin-mark-tab.png" alt="" /><span>Kin</span></a>
         <div id="tabs" class="tabs" role="tablist">
           <button id="new-tab" class="new-tab" aria-label="New tab">+</button>
         </div>
@@ -55,13 +55,16 @@
     <main id="start-page" class="start-page">
       <section id="home-view" class="view active">
         <div class="hero">
+          <div class="hero-mark"><img src="/kin-mark-tab.png" alt="" /></div>
           <img class="wordmark" src="/kin-wordmark.png" alt="Kin" />
+          <p class="welcome-line">Good <span id="day-part">day</span>, <b id="user-first-name">friend</b>.</p>
+          <p class="hero-copy">Your corner of the web, warmed up and ready.</p>
           <form id="home-form" class="home-search">
             <span>⌕</span>
             <input id="home-address" autocomplete="off" placeholder="Search with Bing or enter an address" aria-label="Search the web" />
             <button type="submit">Go</button>
           </form>
-          <div class="hero-meta"><span id="engine-label">Bing</span><i></i><span>FCPS verified</span></div>
+          <div class="hero-meta"><span id="engine-label">Bing</span><i></i><span>Verified session</span><i></i><button id="customize-shortcut" type="button">Make it yours</button></div>
         </div>
         <section class="quick-access">
           <div class="section-title"><div><small>Your space</small><h2>Quick access</h2></div><button id="add-bookmark">+ Add bookmark</button></div>
@@ -86,11 +89,30 @@
   </div>
 
   <div id="modal-backdrop" class="modal-backdrop hidden">
-    <section id="settings-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-      <header><div><small>Kin</small><h2 id="settings-title">Preferences</h2></div><button class="close-modal" aria-label="Close">×</button></header>
-      <label class="field"><span>Search engine</span><select id="engine-select"><option value="bing">Bing</option><option value="google">Google</option><option value="duckduckgo">DuckDuckGo</option><option value="brave">Brave Search</option></select></label>
-      <label class="toggle-row"><span><b>Show starter bookmarks</b><small>Display Kin's suggested shortcuts.</small></span><input id="show-starters" type="checkbox" checked /></label>
-      <div class="modal-actions"><button id="history-button" class="quiet" type="button">View history</button></div>
+    <section id="settings-modal" class="modal settings-modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <header class="settings-header"><div class="settings-brand"><img src="/kin-mark-tab.png" alt="" /><div><small>Your Kin</small><h2 id="settings-title">Make it feel like home</h2></div></div><button class="close-modal" aria-label="Close">×</button></header>
+      <div class="settings-scroll">
+        <section class="setting-section"><div class="setting-heading"><div><small>Theme presets</small><h3>Choose your fire</h3></div><span>Saved automatically</span></div><div id="theme-presets" class="preset-grid theme-presets">
+          <button type="button" data-theme="fire"><i class="theme-preview fire-preview"></i><b>Firelight</b><small>Warm and bright</small></button>
+          <button type="button" data-theme="soot"><i class="theme-preview soot-preview"></i><b>Soot</b><small>Quiet charcoal</small></button>
+          <button type="button" data-theme="parchment"><i class="theme-preview parchment-preview"></i><b>Parchment</b><small>Soft and light</small></button>
+          <button type="button" data-theme="midnight"><i class="theme-preview midnight-preview"></i><b>Midnight</b><small>Cool after dark</small></button>
+        </div></section>
+        <section class="setting-section"><div class="setting-heading"><div><small>Background</small><h3>Set the atmosphere</h3></div></div><div id="background-presets" class="background-presets">
+          <button type="button" data-background="charcoal"><i></i><span>Charcoal</span></button>
+          <button type="button" data-background="embers"><i></i><span>Ember aura</span></button>
+          <button type="button" data-background="ash"><i></i><span>Ash grid</span></button>
+          <button type="button" data-background="paper"><i></i><span>Warm paper</span></button>
+        </div></section>
+        <section class="setting-section"><div class="setting-heading"><div><small>Color</small><h3>Pick an accent</h3></div><label class="custom-color">Custom <input id="custom-accent" type="color" value="#ff7a36" /></label></div><div id="accent-presets" class="accent-presets"><button type="button" data-accent="#ff7a36" style="--swatch:#ff7a36" aria-label="Ember orange"></button><button type="button" data-accent="#f2b84b" style="--swatch:#f2b84b" aria-label="Golden flame"></button><button type="button" data-accent="#e7564a" style="--swatch:#e7564a" aria-label="Coal red"></button><button type="button" data-accent="#c886ff" style="--swatch:#c886ff" aria-label="Violet flame"></button><button type="button" data-accent="#54b8ff" style="--swatch:#54b8ff" aria-label="Blue flame"></button></div></section>
+        <section class="setting-section compact-settings">
+          <label class="field"><span>Search engine</span><select id="engine-select"><option value="bing">Bing</option><option value="google">Google</option><option value="duckduckgo">DuckDuckGo</option><option value="brave">Brave Search</option></select></label>
+          <label class="field"><span>Tab appearance</span><select id="cloak-select"><option value="kin">Kin</option><option value="schoology">Home | Schoology</option><option value="drive">My Drive - Google Drive</option><option value="classroom">Classes</option><option value="blank">New Tab</option></select></label>
+        </section>
+        <label class="toggle-row"><span><b>Cursive headings</b><small>Give greetings and section titles a handwritten feel.</small></span><input id="cursive-toggle" type="checkbox" /></label>
+        <label class="toggle-row"><span><b>Show starter bookmarks</b><small>Display Kin's suggested shortcuts.</small></span><input id="show-starters" type="checkbox" checked /></label>
+      </div>
+      <div class="modal-actions settings-actions"><button id="reset-appearance" class="quiet" type="button">Reset look</button><button id="history-button" class="quiet" type="button">View history</button><button class="close-modal primary" type="button">Done</button></div>
     </section>
     <form id="bookmark-modal" class="modal hidden" role="dialog" aria-modal="true">
       <header><div><small>Quick access</small><h2>Add bookmark</h2></div><button type="button" class="close-modal" aria-label="Close">×</button></header>
@@ -104,6 +126,16 @@
       <div class="spec-grid"><div><small>ENGINE</small><b>Bonfire v1.5</b><span>Kin's current proxy runtime</span></div><div><small>SEARCH</small><b>Choice of engine</b><span>Bing, Google, Brave, or DuckDuckGo</span></div><div><small>YOUR DATA</small><b>Stored on this device</b><span>Bookmarks and history controls live locally</span></div><div><small>ACCESS</small><b>FCPS verified</b><span>Account access is handled through Kin’s gate</span></div></div>
       <div class="engine-note"><b>About the engine</b><p>Bonfire v1.5 is Kin’s custom fire-powered web engine. It handles page rewriting, loading, and navigation while Kin provides the browser interface, tabs, search, and local workspace tools.</p></div>
     </section>
+  </div>
+  <div id="onboarding" class="onboarding hidden" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+    <div class="onboarding-card">
+      <div class="onboarding-brand"><img src="/kin-mark-tab.png" alt="" /><span>Kin</span></div>
+      <div class="onboarding-progress"><i class="active"></i><i></i><i></i></div>
+      <section class="onboarding-step active" data-step="0"><small>WELCOME HOME</small><h1 id="onboarding-title">A browser with a little warmth.</h1><p>Kin keeps your tabs, shortcuts, search, and local history in one place. Let’s make it yours.</p><div class="onboarding-art"><img src="/kin-mark-tab.png" alt="Kin flame" /></div></section>
+      <section class="onboarding-step" data-step="1"><small>YOUR STYLE</small><h1>Choose a starting flame.</h1><p>You can change every detail later in Preferences.</p><div class="onboarding-themes"><button type="button" data-onboard-theme="fire"><i class="fire-preview"></i><b>Firelight</b></button><button type="button" data-onboard-theme="soot"><i class="soot-preview"></i><b>Soot</b></button><button type="button" data-onboard-theme="parchment"><i class="parchment-preview"></i><b>Parchment</b></button></div></section>
+      <section class="onboarding-step" data-step="2"><small>ALL SET</small><h1>Ready when you are, <span id="onboarding-name">friend</span>.</h1><p>Search, open a shortcut, or create a new tab. Kin will remember how you like things.</p><div class="ready-mark">✓</div></section>
+      <footer><button id="onboarding-back" class="quiet hidden" type="button">Back</button><button id="onboarding-next" class="primary" type="button">Get started</button></footer>
+    </div>
   </div>
   <div id="smokescreen" class="smokescreen" aria-hidden="true"><i class="smoke one"></i><i class="smoke two"></i><i class="smoke three"></i></div>
   <div id="local-toast" class="local-toast" role="status">Local data cleared<small>Kin data on this device was removed.</small></div>
