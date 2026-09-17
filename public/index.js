@@ -243,7 +243,7 @@ function setOnboardingStep(step) {
   document.querySelectorAll(".onboarding-step").forEach((node) => node.classList.toggle("active", Number(node.dataset.step) === onboardingStep));
   document.querySelectorAll(".onboarding-progress i").forEach((node, index) => node.classList.toggle("active", index === onboardingStep));
   document.querySelector("#onboarding-back").classList.toggle("hidden", onboardingStep === 0);
-  document.querySelector("#onboarding-next").textContent = onboardingStep === 0 ? "Get started" : onboardingStep === 1 ? "Continue" : "Enter Kin";
+  document.querySelector("#onboarding-next").textContent = onboardingStep < 2 ? "Next" : "Start";
 }
 async function loadIdentity() {
   let firstName = "friend";
