@@ -12,6 +12,16 @@ const starters = [
   { id: "weather", label: "Weather", url: "https://weather.com" },
   { id: "school", label: "FCPS", url: "https://www.fcps.edu" },
 ];
+const homeQuotes = [
+  "Take it one page at a time.",
+  "Stay curious.",
+  "A fresh tab is a fresh start.",
+  "Find something worth knowing.",
+  "Keep the good ideas close.",
+  "Small searches can lead somewhere big.",
+  "Make room for a new idea.",
+  "Learn something unexpected today.",
+];
 const themeDefaults = {
   fire: { background: "embers", accent: "#ff7a36" },
   soot: { background: "charcoal", accent: "#f2b84b" },
@@ -46,6 +56,8 @@ const fullscreenExit = document.querySelector("#fullscreen-exit");
 const adminButton = document.querySelector("#admin-button");
 const enableEngineButton = document.querySelector("#enable-engine");
 const engineModeCard = document.querySelector("#engine-mode-card");
+const scheduleButton = document.querySelector("#schedule-button");
+const schedulePanel = document.querySelector("#schedule-panel");
 const adminUrl = "https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec?admin=1";
 
 let bookmarks = readArray("kin-bookmarks");
@@ -57,10 +69,50 @@ let engineKey = localStorage.getItem("kin-search-engine") || "bing";
 let showStarters = localStorage.getItem("kin-show-starters") !== "false";
 let appearance = readObject("kin-appearance", { theme: "fire", background: "embers", accent: "#ff7a36", cursive: false, cloak: "kin" });
 let engineEnabled = sessionStorage.getItem("kin-engine-enabled") === "true";
+let bellReminders = localStorage.getItem("kin-bell-reminders") !== "false";
+let bellSound = localStorage.getItem("kin-bell-sound") !== "false";
+let reminderAudio;
+let sessionCheckPromise;
 let selectedId;
 let seq = 0;
 let onboardingStep = 0;
 const tabState = [];
+
+const bellSchedules = {
+  anchor: {
+    label: "Anchor Day",
+    entries: [
+      ["Period 1", "7:30", "8:14"], ["Period 2", "8:19", "9:01"], ["Period 3", "9:06", "9:48"],
+      ["Period 5", "9:53", "10:35"], ["Period 6 / Lunch / Recess / SEL", "10:40", "12:40"],
+      ["Period 7", "12:45", "13:27"], ["Period 8", "13:32", "14:15"],
+    ],
+  },
+  blue: {
+    label: "Blue Day",
+    entries: [
+      ["Period 1", "7:30", "8:55"], ["Period 3", "9:00", "9:45"],
+      ["Learning Seminar and Recess", "9:50", "10:40"], ["Period 5 and Lunch", "10:45", "12:45"],
+      ["Period 7", "12:50", "14:15"],
+    ],
+  },
+  silver: {
+    label: "Silver Day",
+    entries: [
+      ["Period 2", "7:30", "8:55"], ["Period 3", "9:00", "9:45"],
+      ["Learning Seminar and Recess", "9:50", "10:40"], ["Period 6 and Lunch", "10:45", "12:45"],
+      ["Period 8", "12:50", "14:15"],
+    ],
+  },
+};
+
+const noRegularScheduleDates = new Set([
+  "2026-09-04", "2026-09-07", "2026-09-21", "2026-10-12", "2026-10-30", "2026-11-02", "2026-11-03",
+  "2026-11-25", "2026-11-26", "2026-11-27", "2026-12-21", "2026-12-22", "2026-12-23", "2026-12-24",
+  "2026-12-25", "2026-12-28", "2026-12-29", "2026-12-30", "2026-12-31", "2027-01-01", "2027-01-18",
+  "2027-01-28", "2027-01-29", "2027-02-01", "2027-02-15", "2027-03-10", "2027-03-22", "2027-03-23",
+  "2027-03-24", "2027-03-25", "2027-03-26", "2027-04-16", "2027-04-19", "2027-04-20", "2027-05-17",
+  "2027-05-31", "2027-06-16", "2027-06-17", "2027-06-18",
+]);
 
 if (!engines[engineKey]) engineKey = "bing";
 if (appearance.cloak === "classroom") appearance.cloak = "studentvue";
@@ -162,7 +214,7 @@ function hexToRgb(hex) {
   return `${parseInt(normalized.slice(1, 3), 16)}, ${parseInt(normalized.slice(3, 5), 16)}, ${parseInt(normalized.slice(5, 7), 16)}`;
 }
 function faviconData(color, letter) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="${color}"/><text x="32" y="43" text-anchor="middle" font-family="Arial" font-size="34" font-weight="700" fill="white">${letter}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="${color}"/><text x="32" y="43" text-anchor="middle" font-family="Arial" font-size="34" font-weight="700" fill="#ffd9a6">${letter}</text></svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 function applyCloak(key) {
@@ -371,9 +423,138 @@ function showError(message, detail = "") {
   errorCode.textContent = detail;
   setTimeout(() => error.classList.remove("show"), 6000);
 }
+
+function showReloadQuote() {
+  const previous = Number(sessionStorage.getItem("kin-last-quote"));
+  const choices = homeQuotes.map((_, index) => index).filter((index) => index !== previous);
+  const index = choices[Math.floor(Math.random() * choices.length)] ?? 0;
+  sessionStorage.setItem("kin-last-quote", String(index));
+  document.querySelector("#home-quote").textContent = homeQuotes[index];
+}
+function beginVerification() {
+  const returnPath = `${location.pathname}${location.search}${location.hash}`;
+  location.assign(`/auth/start?return_path=${encodeURIComponent(returnPath)}`);
+}
+async function ensureSession() {
+  if (sessionCheckPromise) return sessionCheckPromise;
+  sessionCheckPromise = fetch("/api/session", { cache: "no-store", credentials: "same-origin", redirect: "manual" })
+    .then((response) => {
+      if (response.status === 401 || response.type === "opaqueredirect") { beginVerification(); return false; }
+      return response.ok;
+    })
+    .catch(() => true)
+    .finally(() => { sessionCheckPromise = null; });
+  return sessionCheckPromise;
+}
+
+function localDateKey(date) {
+  const year = date.getFullYear(); const month = String(date.getMonth() + 1).padStart(2, "0"); const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+function minutesFromTime(value) {
+  const [hours, minutes] = value.split(":").map(Number); return (hours * 60) + minutes;
+}
+function displayBellTime(value) {
+  const [hours, minutes] = value.split(":").map(Number);
+  return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date(2000, 0, 1, hours, minutes));
+}
+function scheduleForDate(date) {
+  const key = localDateKey(date);
+  if (key < "2026-08-24" || key > "2027-06-16" || noRegularScheduleDates.has(key)) return null;
+  const weekday = date.getDay();
+  if (weekday === 1) return bellSchedules.anchor;
+  if (weekday === 2 || weekday === 4) return bellSchedules.blue;
+  if (weekday === 3 || weekday === 5) return bellSchedules.silver;
+  return null;
+}
+function updateClock() {
+  const now = new Date();
+  document.querySelector("#kin-time").textContent = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(now);
+  document.querySelector("#kin-date").textContent = new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric" }).format(now);
+}
+function schedulePosition(schedule, now = new Date()) {
+  if (!schedule) return { current: -1, next: -1 };
+  const minute = (now.getHours() * 60) + now.getMinutes();
+  let current = -1; let next = -1;
+  schedule.entries.forEach((entry, index) => {
+    if (minute >= minutesFromTime(entry[1]) && minute < minutesFromTime(entry[2])) current = index;
+    if (next < 0 && minute < minutesFromTime(entry[1])) next = index;
+  });
+  return { current, next };
+}
+function renderSchedulePanel() {
+  const now = new Date(); const schedule = scheduleForDate(now); const list = document.querySelector("#schedule-list");
+  document.querySelector("#schedule-day-label").textContent = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric" }).format(now).toUpperCase();
+  list.innerHTML = "";
+  if (!schedule) {
+    document.querySelector("#schedule-title").textContent = "No regular schedule";
+    document.querySelector("#schedule-summary").textContent = "Kin reminders are off today.";
+    list.innerHTML = '<div class="schedule-empty">No standard bell periods today.</div>';
+    return;
+  }
+  const position = schedulePosition(schedule, now);
+  document.querySelector("#schedule-title").textContent = schedule.label;
+  document.querySelector("#schedule-summary").textContent = position.current >= 0 ? `Now: ${schedule.entries[position.current][0]}` : position.next >= 0 ? `Next: ${schedule.entries[position.next][0]}` : "Classes are finished for today.";
+  schedule.entries.forEach((entry, index) => {
+    const row = document.createElement("div"); row.className = `schedule-row${position.current === index ? " current" : position.next === index ? " next" : ""}`;
+    const name = document.createElement("b"); name.textContent = entry[0];
+    const time = document.createElement("span"); time.textContent = `${displayBellTime(entry[1])} - ${displayBellTime(entry[2])}`;
+    row.append(name, time); list.append(row);
+  });
+}
+function toggleSchedulePanel(force) {
+  const open = typeof force === "boolean" ? force : schedulePanel.classList.contains("hidden");
+  schedulePanel.classList.toggle("hidden", !open); scheduleButton.setAttribute("aria-expanded", String(open));
+  if (open) renderSchedulePanel();
+}
+function armReminderAudio() {
+  const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextConstructor) return;
+  if (!reminderAudio) reminderAudio = new AudioContextConstructor();
+  if (reminderAudio.state === "suspended") reminderAudio.resume();
+}
+function playReminderChime(atBell = false) {
+  if (!bellSound) return;
+  try {
+    armReminderAudio();
+    if (!reminderAudio) return;
+    const start = reminderAudio.currentTime;
+    const notes = atBell ? [[659.25, 0], [783.99, .14]] : [[523.25, 0], [659.25, .16]];
+    notes.forEach(([frequency, delay]) => {
+      const oscillator = reminderAudio.createOscillator(); const gain = reminderAudio.createGain();
+      oscillator.type = "sine"; oscillator.frequency.value = frequency;
+      gain.gain.setValueAtTime(.0001, start + delay); gain.gain.exponentialRampToValueAtTime(.055, start + delay + .025); gain.gain.exponentialRampToValueAtTime(.0001, start + delay + .22);
+      oscillator.connect(gain).connect(reminderAudio.destination); oscillator.start(start + delay); oscillator.stop(start + delay + .24);
+    });
+  } catch {}
+}
+function showBellReminder(entry, minutes, atBell = false) {
+  const reminder = document.querySelector("#bell-reminder");
+  document.querySelector("#bell-reminder-title").textContent = atBell ? `${entry[0]} starts now` : `${entry[0]} starts in ${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+  document.querySelector("#bell-reminder-detail").textContent = atBell ? `It is ${displayBellTime(entry[1])}` : `Begins at ${displayBellTime(entry[1])}`;
+  reminder.classList.add("show"); playReminderChime(atBell);
+  setTimeout(() => reminder.classList.remove("show"), 12000);
+}
+function checkBellReminder() {
+  if (!bellReminders || document.hidden) return;
+  const now = new Date(); const schedule = scheduleForDate(now); if (!schedule) return;
+  const currentMinute = (now.getHours() * 60) + now.getMinutes() + (now.getSeconds() / 60);
+  const bellEntry = schedule.entries.find((item) => { const elapsed = currentMinute - minutesFromTime(item[1]); return elapsed >= 0 && elapsed < .34; });
+  if (bellEntry) {
+    const bellKey = `kin-bell-shown-${localDateKey(now)}-${bellEntry[1]}-now`;
+    if (!sessionStorage.getItem(bellKey)) { sessionStorage.setItem(bellKey, "1"); showBellReminder(bellEntry, 0, true); }
+    return;
+  }
+  const warningEntry = schedule.entries.find((item) => { const until = minutesFromTime(item[1]) - currentMinute; return until > 0 && until <= 5; });
+  if (!warningEntry) return;
+  const warningKey = `kin-bell-shown-${localDateKey(now)}-${warningEntry[1]}-five`;
+  if (sessionStorage.getItem(warningKey)) return;
+  sessionStorage.setItem(warningKey, "1"); showBellReminder(warningEntry, Math.max(1, Math.ceil(minutesFromTime(warningEntry[1]) - currentMinute)));
+}
 async function openAddress(raw, targetTab = current()) {
   const url = normalize(raw);
   if (!url) return;
+  if (!await ensureSession()) return;
   if (!engineEnabled) {
     const opened = window.open(url, "_blank", "noopener,noreferrer");
     if (!opened) showError("Kin could not open a normal browser tab. Allow popups and try again.");
@@ -394,9 +575,10 @@ function updateEngineMode() {
   engineModeCard.classList.toggle("enabled", engineEnabled);
   document.querySelector("#engine-mode-title").textContent = engineEnabled ? "Kin Engine active" : "Standard browsing";
   document.querySelector("#engine-mode-description").textContent = engineEnabled ? "Sites stay inside Kin tabs." : "Sites open normally in a new browser tab.";
-  enableEngineButton.disabled = engineEnabled;
-  enableEngineButton.querySelector("b").textContent = engineEnabled ? "Kin Engine On" : "Enable Kin Engine";
-  enableEngineButton.querySelector("small").textContent = engineEnabled ? "Active for this session" : "Use Kin tabs and navigation";
+  enableEngineButton.disabled = false;
+  enableEngineButton.setAttribute("aria-pressed", String(engineEnabled));
+  enableEngineButton.querySelector("b").textContent = engineEnabled ? "Disable Kin Engine" : "Enable Kin Engine";
+  enableEngineButton.querySelector("small").textContent = engineEnabled ? "Return to standard browsing" : "Use Kin tabs and navigation";
 }
 function createIgnitionSparks() {
   const holder = document.querySelector("#ignition-sparks"); holder.innerHTML = "";
@@ -409,15 +591,20 @@ function createIgnitionSparks() {
     holder.append(spark);
   }
 }
-async function enableKinEngine() {
-  if (engineEnabled) return;
+async function toggleKinEngine() {
+  const enabling = !engineEnabled;
   const ignition = document.querySelector("#engine-ignition"); createIgnitionSparks();
+  ignition.classList.toggle("cooling", !enabling);
+  document.querySelector("#ignition-label").textContent = enabling ? "Lighting Kin Engine" : "Returning to Standard";
   ignition.classList.add("active");
   await new Promise((resolve) => setTimeout(resolve, 1350));
-  engineEnabled = true; sessionStorage.setItem("kin-engine-enabled", "true"); updateEngineMode();
+  engineEnabled = enabling;
+  if (engineEnabled) sessionStorage.setItem("kin-engine-enabled", "true");
+  else sessionStorage.removeItem("kin-engine-enabled");
+  updateEngineMode();
   ignition.classList.remove("active");
-  const toast = document.querySelector("#local-toast"); toast.firstChild.textContent = "Kin Engine enabled";
-  toast.querySelector("small").textContent = "Sites now open inside Kin tabs.";
+  const toast = document.querySelector("#local-toast"); toast.firstChild.textContent = engineEnabled ? "Kin Engine enabled" : "Standard browsing enabled";
+  toast.querySelector("small").textContent = engineEnabled ? "Sites now open inside Kin tabs." : "Sites now open in regular browser tabs.";
   toast.classList.add("show"); setTimeout(() => toast.classList.remove("show"), 2600);
 }
 
@@ -519,6 +706,7 @@ async function loadIdentity() {
   let firstName = "friend";
   try {
     const response = await fetch("/api/session", { cache: "no-store" });
+    if (response.status === 401) { beginVerification(); return; }
     if (response.ok) { const session = await response.json(); if (session.firstName) firstName = session.firstName; }
   } catch {}
   document.querySelector("#user-first-name").textContent = firstName;
@@ -587,7 +775,7 @@ document.querySelector("#bookmark-modal").onsubmit = (event) => {
   bookmarks.push({ id: crypto.randomUUID(), label, url, custom: true }); localStorage.setItem("kin-bookmarks", JSON.stringify(bookmarks));
   event.target.reset(); closeModal(); renderBookmarks();
 };
-enableEngineButton.onclick = enableKinEngine;
+enableEngineButton.onclick = toggleKinEngine;
 document.querySelector("#history-button").onclick = () => { closeModal(); const tab = createTab("history"); selectTab(tab.id); };
 document.querySelector("#clear-history").onclick = async () => { await historyReady; historyEntries = []; localStorage.removeItem("kin-history-v2"); renderHistory(); };
 
@@ -610,7 +798,18 @@ async function burnHistory() {
 }
 
 document.querySelector("#show-starters").checked = showStarters;
-applyAppearance(false); setEngine(engineKey); updateEngineMode(); setOnboardingStep(0);
+document.querySelector("#bell-reminders-toggle").checked = bellReminders;
+document.querySelector("#bell-sound-toggle").checked = bellSound;
+document.querySelector("#bell-reminders-toggle").onchange = (event) => { bellReminders = event.target.checked; localStorage.setItem("kin-bell-reminders", String(bellReminders)); };
+document.querySelector("#bell-sound-toggle").onchange = (event) => { bellSound = event.target.checked; localStorage.setItem("kin-bell-sound", String(bellSound)); if (bellSound) armReminderAudio(); };
+scheduleButton.onclick = () => toggleSchedulePanel();
+document.querySelector("#schedule-close").onclick = () => toggleSchedulePanel(false);
+document.querySelector("#bell-reminder-close").onclick = () => document.querySelector("#bell-reminder").classList.remove("show");
+document.addEventListener("click", (event) => { if (!schedulePanel.classList.contains("hidden") && !event.target.closest("#schedule-panel") && !event.target.closest("#schedule-button")) toggleSchedulePanel(false); });
+document.addEventListener("pointerdown", armReminderAudio, { once: true });
+document.addEventListener("keydown", armReminderAudio, { once: true });
+applyAppearance(false); setEngine(engineKey); updateEngineMode(); setOnboardingStep(0); showReloadQuote();
 historyReady = initializeHistory();
 const first = createTab(); selectedId = first.id;
+updateClock(); setInterval(updateClock, 1000); checkBellReminder(); setInterval(checkBellReminder, 10000); setInterval(() => { if (!document.hidden) ensureSession(); }, 60000);
 selectTab(selectedId); renderBookmarks(); loadIdentity();

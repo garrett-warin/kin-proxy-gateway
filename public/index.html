@@ -23,11 +23,14 @@
   <div class="browser-shell">
     <header class="browser-chrome">
       <div class="tab-strip">
-        <a id="kin-home" class="brand-mark" href="/" aria-label="Kin home"><img src="/kin-mark-tab.png" alt="" /><span>Kin</span></a>
+        <a id="kin-home" class="brand-mark" href="/" aria-label="Kin home"><img src="/kin-wordmark.png" alt="Kin" /></a>
         <div id="tabs" class="tabs" role="tablist">
           <button id="new-tab" class="new-tab" aria-label="New tab">+</button>
         </div>
-        <div class="window-buttons" aria-hidden="true"><span>—</span><span>□</span><span>×</span></div>
+        <div class="tab-strip-side">
+          <button id="schedule-button" class="tab-clock" type="button" aria-haspopup="dialog" aria-expanded="false"><span id="kin-time">--:--</span><small id="kin-date">---</small></button>
+          <div class="window-buttons" aria-hidden="true"><span>—</span><span>□</span><span>×</span></div>
+        </div>
       </div>
       <div class="toolbar">
         <button id="back" class="tool" aria-label="Back">‹</button>
@@ -41,7 +44,7 @@
         </form>
         <div class="kin-menu-wrap">
           <button id="kin-menu-button" class="kin-menu-button" type="button" aria-haspopup="menu" aria-expanded="false">
-            <img src="/kin-mark-tab.png" alt="" /><span>Kin</span><i>⌄</i>
+            <img src="/kin-wordmark.png" alt="Kin" /><i>⌄</i>
           </button>
           <div id="kin-menu" class="kin-menu hidden" role="menu">
             <button id="smokescreen-button" type="button" role="menuitem"><span class="menu-icon fire-icon">●</span><span><b>Smokescreen</b><small>Clear local data</small></span></button>
@@ -60,17 +63,16 @@
     <main id="start-page" class="start-page">
       <section id="home-view" class="view active">
         <div class="hero">
-          <div class="hero-mark"><img src="/kin-mark-tab.png" alt="" /></div>
           <img class="wordmark" src="/kin-wordmark.png" alt="Kin" />
           <p class="welcome-line">Good <span id="day-part">day</span>, <b id="user-first-name">friend</b>.</p>
-          <p class="hero-copy">Search or enter a website.</p>
+          <p id="home-quote" class="home-quote">Take it one page at a time.</p>
           <form id="home-form" class="home-search">
             <span>⌕</span>
             <input id="home-address" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Search with Bing or enter an address" aria-label="Search the web" />
             <button type="submit">Go</button>
           </form>
           <div id="engine-mode-card" class="engine-mode-card">
-            <div class="engine-mode-copy"><span class="mode-light" aria-hidden="true"></span><div><b id="engine-mode-title">Standard browsing</b><small id="engine-mode-description">Sites open normally in a new browser tab.</small></div></div>
+            <div class="engine-mode-copy"><div><b id="engine-mode-title">Standard browsing</b><small id="engine-mode-description">Sites open normally in a new browser tab.</small></div></div>
             <button id="enable-engine" type="button"><span class="engine-button-flame" aria-hidden="true">◆</span><span><b>Enable Kin Engine</b><small>Use Kin tabs and navigation</small></span></button>
           </div>
           <div class="hero-meta"><span id="engine-label">Bing</span><i></i><span>Verified</span><i></i><button id="customize-shortcut" type="button">Customize</button></div>
@@ -103,7 +105,7 @@
 
   <div id="modal-backdrop" class="modal-backdrop hidden">
     <section id="settings-modal" class="modal settings-modal hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
-      <header class="settings-header"><div class="settings-brand"><img src="/kin-mark-tab.png" alt="" /><div><small>Kin</small><h2 id="settings-title">Settings</h2></div></div><button class="close-modal" aria-label="Close">×</button></header>
+      <header class="settings-header"><div class="settings-brand"><img src="/kin-wordmark.png" alt="Kin" /><div><small>Kin</small><h2 id="settings-title">Settings</h2></div></div><button class="close-modal" aria-label="Close">×</button></header>
       <div class="settings-scroll">
         <section class="setting-section"><div class="setting-heading"><div><small>Appearance</small><h3>Theme</h3></div><span>Auto-saved</span></div><div id="theme-presets" class="preset-grid theme-presets">
           <button type="button" data-theme="fire"><i class="theme-preview fire-preview"></i><b>Firelight</b><small>Warm</small></button>
@@ -130,6 +132,8 @@
         </div></section>
         <label class="toggle-row"><span><b>Cursive headings</b><small>Use handwritten headings.</small></span><input id="cursive-toggle" type="checkbox" /></label>
         <label class="toggle-row"><span><b>Starter bookmarks</b><small>Show suggested websites.</small></span><input id="show-starters" type="checkbox" checked /></label>
+        <label class="toggle-row"><span><b>Bell reminders</b><small>Show a quiet reminder five minutes before class.</small></span><input id="bell-reminders-toggle" type="checkbox" checked /></label>
+        <label class="toggle-row"><span><b>Reminder sound</b><small>Play a soft two-note chime with reminders.</small></span><input id="bell-sound-toggle" type="checkbox" checked /></label>
       </div>
       <div class="modal-actions settings-actions"><button id="reset-appearance" class="quiet" type="button">Reset look</button><button id="history-button" class="quiet" type="button">View history</button><button class="close-modal primary" type="button">Done</button></div>
     </section>
@@ -146,19 +150,30 @@
       <div class="engine-note"><b>About the engine</b><p>Bonfire v1.5 is Kin's custom web engine. It handles page loading, navigation, cookies, and links while Kin provides the browser interface, tabs, search, bookmarks, history, and appearance controls. Kin does not upload browsing history; history is encrypted on this device.</p></div>
     </section>
   </div>
+  <section id="schedule-panel" class="schedule-panel hidden" role="dialog" aria-labelledby="schedule-title">
+    <header><div><small id="schedule-day-label">TODAY</small><h2 id="schedule-title">Bell schedule</h2></div><button id="schedule-close" type="button" aria-label="Close schedule">×</button></header>
+    <div id="schedule-summary" class="schedule-summary"></div>
+    <div id="schedule-list" class="schedule-list"></div>
+    <footer>Kin chimes five minutes before class and again at the bell.</footer>
+  </section>
+  <aside id="bell-reminder" class="bell-reminder" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+    <div><small>UP NEXT</small><b id="bell-reminder-title">Class starts soon</b><span id="bell-reminder-detail"></span></div>
+    <button id="bell-reminder-close" type="button" aria-label="Dismiss reminder">×</button>
+  </aside>
   <button id="fullscreen-exit" class="fullscreen-exit" type="button" aria-label="Exit fullscreen"><span>×</span><small>Exit fullscreen</small></button>
   <div id="onboarding" class="onboarding hidden" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
     <div class="onboarding-card">
-      <div class="onboarding-brand"><img src="/kin-mark-tab.png" alt="" /><span>Kin</span></div>
+      <div class="onboarding-brand"><img src="/kin-wordmark.png" alt="Kin" /></div>
       <div class="onboarding-progress"><i class="active"></i><i></i><i></i></div>
-      <section class="onboarding-step active" data-step="0"><small>WELCOME</small><h1 id="onboarding-title">Welcome to Kin.</h1><p>Set up your browser in a few steps.</p><div class="onboarding-art"><img src="/kin-mark-tab.png" alt="Kin flame" /></div></section>
+      <section class="onboarding-step active" data-step="0"><small>WELCOME</small><h1 id="onboarding-title">Welcome to Kin.</h1><p>Set up your browser in a few steps.</p><div class="onboarding-art"><img src="/kin-wordmark.png" alt="Kin" /></div></section>
       <section class="onboarding-step" data-step="1"><small>THEME</small><h1>Choose a theme.</h1><p>You can change it later in Settings.</p><div class="onboarding-themes"><button type="button" data-onboard-theme="fire"><i class="fire-preview"></i><b>Firelight</b></button><button type="button" data-onboard-theme="soot"><i class="soot-preview"></i><b>Soot</b></button><button type="button" data-onboard-theme="parchment"><i class="parchment-preview"></i><b>Parchment</b></button></div></section>
       <section class="onboarding-step" data-step="2"><small>DONE</small><h1>You're ready, <span id="onboarding-name">friend</span>.</h1><p>Start searching or open a bookmark.</p><div class="ready-mark">✓</div></section>
       <footer><button id="onboarding-back" class="quiet hidden" type="button">Back</button><button id="onboarding-next" class="primary" type="button">Continue</button></footer>
     </div>
   </div>
   <div id="smokescreen" class="smokescreen" aria-hidden="true"><i class="smoke one"></i><i class="smoke two"></i><i class="smoke three"></i></div>
-  <div id="engine-ignition" class="engine-ignition" aria-hidden="true"><div class="ignition-core"><img src="/kin-mark-tab.png" alt="" /><span>Lighting Kin Engine</span></div><div id="ignition-sparks" class="ignition-sparks"></div></div>
+  <div id="engine-ignition" class="engine-ignition" aria-hidden="true"><div class="ignition-orbit one"></div><div class="ignition-orbit two"></div><div class="ignition-core"><img src="/kin-wordmark.png" alt="Kin" /><span id="ignition-label">Lighting Kin Engine</span></div><div id="ignition-sparks" class="ignition-sparks"></div></div>
   <div id="local-toast" class="local-toast" role="status">Local data cleared<small>Kin data on this device was removed.</small></div>
 </body>
 </html>

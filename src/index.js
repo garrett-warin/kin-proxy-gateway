@@ -34,6 +34,15 @@ function cookieValue(header, name) {
 	return String(header || "").split(";").map((part) => part.trim()).find((part) => part.startsWith(`${name}=`))?.slice(name.length + 1) || "";
 }
 
+function safeReturnPath(value) {
+	if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || value.length > 2048) return "/";
+	return value;
+}
+
+function decodedCookieValue(header, name) {
+	try { return decodeURIComponent(cookieValue(header, name)); } catch { return "/"; }
+}
+
 function trustedPublicOrigin(request) {
 	const candidates = [
 		request.headers["x-kin-public-origin"],
@@ -89,23 +98,32 @@ fastify.addHook("onSend", async (_request, reply, payload) => {
 
 fastify.addHook("onRequest", async (request, reply) => {
 	const url = new URL(request.raw.url, "http://kin.local");
+	if (url.pathname === "/auth/start") {
+		const returnPath = safeReturnPath(url.searchParams.get("return_path"));
+		const gate = new URL(accessGateUrl);
+		gate.searchParams.set("return_origin", trustedPublicOrigin(request));
+		reply.header("Set-Cookie", `kin_return_path=${encodeURIComponent(returnPath)}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`);
+		return reply.redirect(gate.toString(), 302);
+	}
 	const incomingToken = url.searchParams.get("kin_token");
 	if (incomingToken) {
 		const claims = verifyKinToken(incomingToken);
-		if (!claims) return reply.code(403).type("text/html").send("<h1>Kin access denied</h1><p>Your FCPS access link is invalid or expired. Return to Kin and try again.</p>");
+		if (!claims) return reply.redirect(`/auth/start?return_path=${encodeURIComponent("/")}`, 302);
 		url.searchParams.delete("kin_token");
-		reply.header("Set-Cookie", `kin_session=${incomingToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${Math.max(1, claims.exp - Math.floor(Date.now() / 1000))}`);
-		return reply.redirect(`${url.pathname}${url.search}`, 302);
+		const savedReturnPath = safeReturnPath(decodedCookieValue(request.headers.cookie, "kin_return_path"));
+		reply.header("Set-Cookie", [
+			`kin_session=${incomingToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${Math.max(1, claims.exp - Math.floor(Date.now() / 1000))}`,
+			"kin_return_path=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0",
+		]);
+		return reply.redirect(savedReturnPath === "/" ? `${url.pathname}${url.search}` : savedReturnPath, 302);
 	}
 	if (!verifyKinToken(cookieValue(request.headers.cookie, "kin_session"))) {
-		// The main Kin address is the friendly entry point. Authentication happens
-		// in the FCPS Apps Script Web App before it redirects back with a token.
-		if (url.pathname === "/" && (request.method === "GET" || request.method === "HEAD")) {
-			const gate = new URL(accessGateUrl);
-			gate.searchParams.set("return_origin", trustedPublicOrigin(request));
-			return reply.redirect(gate.toString(), 302);
+		const isDocument = request.headers["sec-fetch-dest"] === "document" || String(request.headers.accept || "").includes("text/html");
+		if (isDocument && (request.method === "GET" || request.method === "HEAD")) {
+			const returnPath = safeReturnPath(`${url.pathname}${url.search}`);
+			return reply.redirect(`/auth/start?return_path=${encodeURIComponent(returnPath)}`, 302);
 		}
-		return reply.code(403).type("text/html").send("<h1>Kin access required</h1><p>Start from the FCPS Kin page to continue.</p>");
+		return reply.code(401).type("application/json").send({ error: "verification_required", verify: "/auth/start" });
 	}
 });
 
