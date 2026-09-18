@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#17120f" />
+  <meta name="theme-color" content="#2a211d" />
   <title>Kin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="icon" href="/kin-mark-tab.png" />
   <link rel="stylesheet" href="/index.css" />
+  <link rel="stylesheet" href="/revamp.css" />
   <script src="/runtime/runtimekit.js"></script>
   <script src="/controller/controller.api.js"></script>
   <script src="/runtime/runtimekit-utils.js"></script>
@@ -25,33 +26,33 @@
       <div class="tab-strip">
         <a id="kin-home" class="brand-mark" href="/" aria-label="Kin home"><img src="/kin-wordmark.png" alt="Kin" /></a>
         <div id="tabs" class="tabs" role="tablist">
-          <button id="new-tab" class="new-tab" aria-label="New tab">+</button>
+          <button id="new-tab" class="new-tab" aria-label="New tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
         </div>
         <div class="tab-strip-side">
           <button id="schedule-button" class="tab-clock" type="button" aria-haspopup="dialog" aria-expanded="false"><span id="kin-time">--:--</span><small id="kin-date">---</small></button>
-          <div class="window-buttons" aria-hidden="true"><span>—</span><span>□</span><span>×</span></div>
+          <div class="window-buttons" aria-hidden="true"></div>
         </div>
       </div>
       <div class="toolbar">
-        <button id="back" class="tool" aria-label="Back">‹</button>
-        <button id="forward" class="tool" aria-label="Forward">›</button>
-        <button id="reload" class="tool reload" aria-label="Reload">↻</button>
+        <button id="back" class="tool" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button id="forward" class="tool" aria-label="Forward"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button id="reload" class="tool reload" aria-label="Reload"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7"/></svg></button>
         <form id="kin-form" class="omnibox">
-          <span class="search-icon">⌕</span>
+          <span class="search-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg></span>
           <input id="kin-address" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Search or enter an address" aria-label="Search or enter an address" />
           <input id="kin-search-engine" value="https://www.bing.com/search?q=%s" type="hidden" />
           <span class="verified">Kin</span>
         </form>
         <div class="kin-menu-wrap">
           <button id="kin-menu-button" class="kin-menu-button" type="button" aria-haspopup="menu" aria-expanded="false">
-            <img src="/kin-wordmark.png" alt="Kin" /><i>⌄</i>
+            <span class="menu-wordmark"><img src="/kin-wordmark.png" alt="Kin" /></span><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></i>
           </button>
           <div id="kin-menu" class="kin-menu hidden" role="menu">
-            <button id="smokescreen-button" type="button" role="menuitem"><span class="menu-icon fire-icon">●</span><span><b>Smokescreen</b><small>Clear local data</small></span></button>
-            <button id="details-button" type="button" role="menuitem"><span class="menu-icon">◫</span><span><b>Details</b><small>About Kin</small></span></button>
-            <button id="about-blank-button" type="button" role="menuitem"><span class="menu-icon">↗</span><span><b>Open in about:blank</b><small>Launch Kin in a blank tab</small></span></button>
-            <button id="fullscreen-button" type="button" role="menuitem"><span class="menu-icon">⛶</span><span><b>Fullscreen</b><small>Hide the Kin browser bar</small></span></button>
-            <button id="admin-button" class="admin-link" type="button" role="menuitem"><span class="menu-icon">◇</span><span><b>Admin</b><small>Manage access</small></span></button>
+            <button id="smokescreen-button" type="button" role="menuitem"><span class="menu-icon fire-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22c4 0 7-2.8 7-7.1 0-3-1.8-5.4-4.3-7.8.1 2.4-1.1 3.8-2.3 4.6.3-4.1-1.8-7.2-5.1-9.7.2 4-2.3 6.3-2.3 10.2C5 17.8 8.1 22 12 22Z"/></svg></span><span><b>Smokescreen</b><small>Clear local data</small></span></button>
+            <button id="details-button" type="button" role="menuitem"><span class="menu-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg></span><span><b>Details</b><small>About Kin</small></span></button>
+            <button id="about-blank-button" type="button" role="menuitem"><span class="menu-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5M19 5l-8 8"/><path d="M18 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></span><span><b>Open in about:blank</b><small>Launch Kin in a blank tab</small></span></button>
+            <button id="fullscreen-button" type="button" role="menuitem"><span class="menu-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg></span><span><b>Fullscreen</b><small>Hide the Kin browser bar</small></span></button>
+            <button id="admin-button" class="admin-link" type="button" role="menuitem"><span class="menu-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4.5 6v5c0 4.8 2.8 8.3 7.5 10 4.7-1.7 7.5-5.2 7.5-10V6L12 3Z"/><path d="M9 12.5 11 14l4-4"/></svg></span><span><b>Admin</b><small>Manage access</small></span></button>
           </div>
         </div>
         <button id="settings-button" class="tool settings-tool" aria-label="Preferences">
@@ -67,7 +68,7 @@
           <p class="welcome-line">Good <span id="day-part">day</span>, <b id="user-first-name">friend</b>.</p>
           <p class="home-quote"><q id="home-quote-text">Stay hungry. Stay foolish.</q><cite id="home-quote-author">Steve Jobs</cite></p>
           <form id="home-form" class="home-search">
-            <span>⌕</span>
+            <span class="home-search-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg></span>
             <input id="home-address" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Search with Bing or enter an address" aria-label="Search the web" />
             <button type="submit">Go</button>
           </form>
