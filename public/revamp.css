@@ -18,6 +18,7 @@
   --shadow: 0 18px 46px rgba(67, 38, 25, .14);
   --shadow-small: 0 7px 20px rgba(67, 38, 25, .11);
   --radius: 16px;
+  --logo-filter: drop-shadow(0 2px 0 rgba(74, 40, 26, .1));
 }
 
 body[data-theme="fire"], body:not([data-theme]) {
@@ -35,6 +36,7 @@ body[data-theme="fire"], body:not([data-theme]) {
   --chrome-muted: #bba695;
   --rule: #c89c72;
   --rule-strong: #9e684b;
+  --logo-filter: drop-shadow(0 2px 0 rgba(74, 40, 26, .1));
 }
 body[data-theme="soot"] {
   --canvas: #151412;
@@ -51,6 +53,7 @@ body[data-theme="soot"] {
   --chrome-muted: #95887a;
   --rule: #3d3730;
   --rule-strong: #68594b;
+  --logo-filter: sepia(.35) saturate(1.35) brightness(.96) contrast(1.08) drop-shadow(0 3px 0 rgba(0, 0, 0, .24));
 }
 body[data-theme="parchment"] {
   --canvas: #efe2cf;
@@ -67,6 +70,7 @@ body[data-theme="parchment"] {
   --chrome-muted: #ccbba5;
   --rule: #cbb292;
   --rule-strong: #98795f;
+  --logo-filter: sepia(.55) saturate(1.45) hue-rotate(340deg) brightness(.91) contrast(1.08) drop-shadow(0 2px 0 rgba(87, 55, 36, .12));
 }
 body[data-theme="midnight"] {
   --canvas: #101722;
@@ -83,6 +87,7 @@ body[data-theme="midnight"] {
   --chrome-muted: #8794a6;
   --rule: #2b3d54;
   --rule-strong: #4e6681;
+  --logo-filter: hue-rotate(164deg) saturate(.92) brightness(1.08) contrast(1.04) drop-shadow(0 3px 0 rgba(0, 0, 0, .28));
 }
 
 * { box-sizing: border-box; }
@@ -164,6 +169,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .tab.active { background: var(--chrome-raised); color: var(--chrome-ink); }
 .tab.active::after { content: ""; position: absolute; right: 10px; bottom: 0; left: 10px; height: 2px; background: var(--accent); }
 .tab img { width: 15px; height: 15px; flex: 0 0 auto; object-fit: contain; }
+.tab img[src$="kin-mark-tab.png"] { filter: var(--logo-filter); }
 .tab span:nth-child(2) { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 600; }
 .tab i { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: var(--chrome-muted); font-size: 15px; font-style: normal; }
 .tab i:hover { background: rgba(255, 230, 194, .1); color: var(--chrome-ink); }
@@ -301,7 +307,7 @@ body[data-background="paper"] .start-page { background-color: var(--canvas) !imp
 .mode-kicker { display: block; color: var(--accent); font-size: 8px; font-weight: 800; letter-spacing: .17em; }
 .wordmark-trigger { width: 260px; height: 96px; display: block; overflow: hidden; margin: 0 auto 2px; border: 0; background: transparent; padding: 0; cursor: default; }
 .wordmark-trigger.tap { animation: wordmark-tap .2s ease-out; }
-.wordmark { width: 260px !important; height: 112px !important; display: block; margin: -8px 0 0 !important; border-radius: 0 !important; background: transparent !important; object-fit: cover; object-position: center; padding: 0 !important; filter: drop-shadow(0 2px 0 rgba(74, 40, 26, .1)) !important; }
+.wordmark { width: 260px !important; height: 112px !important; display: block; margin: -8px 0 0 !important; border-radius: 0 !important; background: transparent !important; object-fit: cover; object-position: center; padding: 0 !important; filter: var(--logo-filter) !important; transition: filter .2s ease; }
 .welcome-line { margin: 0 0 24px; color: var(--ink-soft); font-size: 14px; font-weight: 600; letter-spacing: -.02em; }
 .welcome-line b { color: var(--accent); font-family: inherit !important; font-size: inherit !important; font-weight: 800; }
 .home-quote { min-width: 0; margin: 0 0 0 auto; color: var(--ink-soft); font-family: "Caveat", cursive; font-size: 15px; line-height: 1.2; text-align: right; }
