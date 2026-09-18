@@ -44,14 +44,19 @@ const aboutBlankButton = document.querySelector("#about-blank-button");
 const fullscreenButton = document.querySelector("#fullscreen-button");
 const fullscreenExit = document.querySelector("#fullscreen-exit");
 const adminButton = document.querySelector("#admin-button");
+const enableEngineButton = document.querySelector("#enable-engine");
+const engineModeCard = document.querySelector("#engine-mode-card");
 const adminUrl = "https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec?admin=1";
 
 let bookmarks = readArray("kin-bookmarks");
+let starredIds = readArray("kin-starred-sites");
+if (!localStorage.getItem("kin-starred-sites")) starredIds = ["wikipedia", "archive", "weather"];
 let historyEntries = [];
 let historyReady = Promise.resolve();
 let engineKey = localStorage.getItem("kin-search-engine") || "bing";
 let showStarters = localStorage.getItem("kin-show-starters") !== "false";
 let appearance = readObject("kin-appearance", { theme: "fire", background: "embers", accent: "#ff7a36", cursive: false, cloak: "kin" });
+let engineEnabled = sessionStorage.getItem("kin-engine-enabled") === "true";
 let selectedId;
 let seq = 0;
 let onboardingStep = 0;
@@ -369,6 +374,11 @@ function showError(message, detail = "") {
 async function openAddress(raw, targetTab = current()) {
   const url = normalize(raw);
   if (!url) return;
+  if (!engineEnabled) {
+    const opened = window.open(url, "_blank", "noopener,noreferrer");
+    if (!opened) showError("Kin could not open a normal browser tab. Allow popups and try again.");
+    return;
+  }
   const tab = targetTab; tab.url = url; tab.raw = raw; addHistory(url);
   try {
     const controller = await bonfireController;
@@ -380,10 +390,68 @@ async function openAddress(raw, targetTab = current()) {
   } catch (cause) { showError("Kin could not open that page.", String(cause)); }
 }
 
+function updateEngineMode() {
+  engineModeCard.classList.toggle("enabled", engineEnabled);
+  document.querySelector("#engine-mode-title").textContent = engineEnabled ? "Kin Engine active" : "Standard browsing";
+  document.querySelector("#engine-mode-description").textContent = engineEnabled ? "Sites stay inside Kin tabs." : "Sites open normally in a new browser tab.";
+  enableEngineButton.disabled = engineEnabled;
+  enableEngineButton.querySelector("b").textContent = engineEnabled ? "Kin Engine On" : "Enable Kin Engine";
+  enableEngineButton.querySelector("small").textContent = engineEnabled ? "Active for this session" : "Use Kin tabs and navigation";
+}
+function createIgnitionSparks() {
+  const holder = document.querySelector("#ignition-sparks"); holder.innerHTML = "";
+  for (let index = 0; index < 28; index += 1) {
+    const spark = document.createElement("i");
+    spark.style.setProperty("--x", `${8 + Math.random() * 84}%`);
+    spark.style.setProperty("--delay", `${Math.random() * .55}s`);
+    spark.style.setProperty("--drift", `${-55 + Math.random() * 110}px`);
+    spark.style.setProperty("--size", `${3 + Math.random() * 7}px`);
+    holder.append(spark);
+  }
+}
+async function enableKinEngine() {
+  if (engineEnabled) return;
+  const ignition = document.querySelector("#engine-ignition"); createIgnitionSparks();
+  ignition.classList.add("active");
+  await new Promise((resolve) => setTimeout(resolve, 1350));
+  engineEnabled = true; sessionStorage.setItem("kin-engine-enabled", "true"); updateEngineMode();
+  ignition.classList.remove("active");
+  const toast = document.querySelector("#local-toast"); toast.firstChild.textContent = "Kin Engine enabled";
+  toast.querySelector("small").textContent = "Sites now open inside Kin tabs.";
+  toast.classList.add("show"); setTimeout(() => toast.classList.remove("show"), 2600);
+}
+
 function renderBookmarks() {
   const all = [...starters, ...bookmarks];
   grid(document.querySelector("#bookmark-grid"), showStarters ? all : bookmarks);
   grid(document.querySelector("#all-bookmarks"), all);
+  renderStarred(all);
+}
+function persistStars() {
+  localStorage.setItem("kin-starred-sites", JSON.stringify(starredIds));
+}
+function toggleStar(id) {
+  starredIds = starredIds.includes(id) ? starredIds.filter((item) => item !== id) : [...starredIds, id];
+  persistStars(); renderBookmarks();
+}
+function renderStarred(items) {
+  const container = document.querySelector("#starred-grid");
+  const starred = starredIds.map((id) => items.find((item) => item.id === id)).filter(Boolean);
+  if (!starred.length) {
+    container.innerHTML = '<div class="starred-empty"><span>☆</span><p>Star a bookmark to keep it here.</p></div>';
+    return;
+  }
+  container.innerHTML = "";
+  starred.forEach((item) => {
+    const shortcut = document.createElement("article"); shortcut.className = "starred-site";
+    const open = document.createElement("button"); open.className = "starred-open";
+    const icon = document.createElement("span"); icon.className = "starred-icon"; icon.textContent = item.label.trim().charAt(0).toUpperCase() || "•";
+    const label = document.createElement("span"); label.className = "starred-label"; label.textContent = item.label;
+    open.append(icon, label); open.onclick = () => openAddress(item.url);
+    const unstar = document.createElement("button"); unstar.className = "starred-remove"; unstar.type = "button"; unstar.textContent = "×";
+    unstar.setAttribute("aria-label", `Remove ${item.label} from starred sites`); unstar.onclick = () => toggleStar(item.id);
+    shortcut.append(open, unstar); container.append(shortcut);
+  });
 }
 async function addHistory(url) {
   await historyReady;
@@ -414,9 +482,13 @@ function grid(container, items) {
     main.innerHTML = '<span class="bookmark-icon">◎</span><span class="bookmark-copy"><b></b><small></small></span>';
     main.querySelector("b").textContent = item.label; main.querySelector("small").textContent = host(item.url);
     main.onclick = () => openAddress(item.url); card.append(main);
+    const star = document.createElement("button"); star.className = `star-bookmark${starredIds.includes(item.id) ? " active" : ""}`;
+    star.type = "button"; star.textContent = starredIds.includes(item.id) ? "★" : "☆";
+    star.setAttribute("aria-label", `${starredIds.includes(item.id) ? "Unstar" : "Star"} ${item.label}`);
+    star.onclick = () => toggleStar(item.id); card.append(star);
     if (item.custom) {
       const remove = document.createElement("button"); remove.className = "remove-bookmark"; remove.textContent = "×";
-      remove.onclick = () => { bookmarks = bookmarks.filter((bookmark) => bookmark.id !== item.id); localStorage.setItem("kin-bookmarks", JSON.stringify(bookmarks)); renderBookmarks(); };
+      remove.onclick = () => { bookmarks = bookmarks.filter((bookmark) => bookmark.id !== item.id); starredIds = starredIds.filter((id) => id !== item.id); localStorage.setItem("kin-bookmarks", JSON.stringify(bookmarks)); persistStars(); renderBookmarks(); };
       card.append(remove);
     }
     container.append(card);
@@ -515,13 +587,15 @@ document.querySelector("#bookmark-modal").onsubmit = (event) => {
   bookmarks.push({ id: crypto.randomUUID(), label, url, custom: true }); localStorage.setItem("kin-bookmarks", JSON.stringify(bookmarks));
   event.target.reset(); closeModal(); renderBookmarks();
 };
+enableEngineButton.onclick = enableKinEngine;
 document.querySelector("#history-button").onclick = () => { closeModal(); const tab = createTab("history"); selectTab(tab.id); };
 document.querySelector("#clear-history").onclick = async () => { await historyReady; historyEntries = []; localStorage.removeItem("kin-history-v2"); renderHistory(); };
 
 async function burnHistory() {
   closeKinMenu();
   const overlay = document.querySelector("#smokescreen"); const toast = document.querySelector("#local-toast");
-  overlay.classList.add("active"); historyEntries = []; bookmarks = []; localStorage.clear(); sessionStorage.clear();
+  toast.firstChild.textContent = "Local data cleared"; toast.querySelector("small").textContent = "Kin data on this device was removed.";
+  overlay.classList.add("active"); historyEntries = []; bookmarks = []; starredIds = ["wikipedia", "archive", "weather"]; engineEnabled = false; localStorage.clear(); sessionStorage.clear();
   try {
     for (const key of await caches.keys()) await caches.delete(key);
     if (indexedDB.databases) for (const db of await indexedDB.databases()) if (db.name) indexedDB.deleteDatabase(db.name);
@@ -530,13 +604,13 @@ async function burnHistory() {
   const fresh = createTab(); selectedId = fresh.id;
   setTimeout(() => {
     overlay.classList.remove("active"); appearance = { theme: "fire", background: "embers", accent: "#ff7a36", cursive: false, cloak: "kin" };
-    applyAppearance(); setEngine("bing"); renderBookmarks(); renderHistory(); selectTab(selectedId);
+    applyAppearance(); setEngine("bing"); updateEngineMode(); renderBookmarks(); renderHistory(); selectTab(selectedId);
     toast.classList.add("show"); setTimeout(() => toast.classList.remove("show"), 3000);
   }, 1850);
 }
 
 document.querySelector("#show-starters").checked = showStarters;
-applyAppearance(false); setEngine(engineKey); setOnboardingStep(0);
+applyAppearance(false); setEngine(engineKey); updateEngineMode(); setOnboardingStep(0);
 historyReady = initializeHistory();
 const first = createTab(); selectedId = first.id;
 selectTab(selectedId); renderBookmarks(); loadIdentity();

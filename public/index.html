@@ -69,8 +69,16 @@
             <input id="home-address" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Search with Bing or enter an address" aria-label="Search the web" />
             <button type="submit">Go</button>
           </form>
+          <div id="engine-mode-card" class="engine-mode-card">
+            <div class="engine-mode-copy"><span class="mode-light" aria-hidden="true"></span><div><b id="engine-mode-title">Standard browsing</b><small id="engine-mode-description">Sites open normally in a new browser tab.</small></div></div>
+            <button id="enable-engine" type="button"><span class="engine-button-flame" aria-hidden="true">◆</span><span><b>Enable Kin Engine</b><small>Use Kin tabs and navigation</small></span></button>
+          </div>
           <div class="hero-meta"><span id="engine-label">Bing</span><i></i><span>Verified</span><i></i><button id="customize-shortcut" type="button">Customize</button></div>
         </div>
+        <section class="starred-sites" aria-labelledby="starred-heading">
+          <div class="section-title starred-title"><div><small>Favorites</small><h2 id="starred-heading">Starred</h2></div><span>Pin sites you use most</span></div>
+          <div id="starred-grid" class="starred-grid"></div>
+        </section>
         <section class="quick-access">
           <div class="section-title"><div><small>Bookmarks</small><h2>Quick access</h2></div><button id="add-bookmark">+ Add bookmark</button></div>
           <div id="bookmark-grid" class="bookmark-grid"></div>
@@ -150,6 +158,7 @@
     </div>
   </div>
   <div id="smokescreen" class="smokescreen" aria-hidden="true"><i class="smoke one"></i><i class="smoke two"></i><i class="smoke three"></i></div>
+  <div id="engine-ignition" class="engine-ignition" aria-hidden="true"><div class="ignition-core"><img src="/kin-mark-tab.png" alt="" /><span>Lighting Kin Engine</span></div><div id="ignition-sparks" class="ignition-sparks"></div></div>
   <div id="local-toast" class="local-toast" role="status">Local data cleared<small>Kin data on this device was removed.</small></div>
 </body>
 </html>
