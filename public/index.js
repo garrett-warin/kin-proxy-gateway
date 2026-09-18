@@ -471,15 +471,15 @@ function extinguishSite() {
     fire.setAttribute("aria-hidden", "true");
     document.body.classList.remove("site-burning");
     wordmarkClickCount = 0;
-    document.querySelector("#wordmark-trigger").focus();
+    document.querySelector("#kin-home").focus();
   }, 1200);
 }
 function countWordmarkClick() {
   if (document.querySelector("#site-fire").classList.contains("active")) return;
   wordmarkClickCount += 1;
   clearTimeout(wordmarkClickTimer);
-  document.querySelector("#wordmark-trigger").classList.remove("tap");
-  requestAnimationFrame(() => document.querySelector("#wordmark-trigger").classList.add("tap"));
+  document.querySelector("#kin-home").classList.remove("tap");
+  requestAnimationFrame(() => document.querySelector("#kin-home").classList.add("tap"));
   if (wordmarkClickCount >= 5) { wordmarkClickCount = 0; igniteSite(); return; }
   wordmarkClickTimer = setTimeout(() => { wordmarkClickCount = 0; }, 3200);
 }
@@ -857,7 +857,7 @@ document.querySelector("#bell-sound-toggle").onchange = (event) => { bellSound =
 scheduleButton.onclick = () => toggleSchedulePanel();
 document.querySelector("#schedule-close").onclick = () => toggleSchedulePanel(false);
 document.querySelector("#bell-reminder-close").onclick = () => document.querySelector("#bell-reminder").classList.remove("show");
-document.querySelector("#wordmark-trigger").onclick = countWordmarkClick;
+document.querySelector("#kin-home").addEventListener("click", countWordmarkClick);
 document.querySelector("#fire-bucket").onclick = extinguishSite;
 document.addEventListener("click", (event) => { if (!schedulePanel.classList.contains("hidden") && !event.target.closest("#schedule-panel") && !event.target.closest("#schedule-button")) toggleSchedulePanel(false); });
 document.addEventListener("pointerdown", armReminderAudio, { once: true });
