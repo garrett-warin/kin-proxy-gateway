@@ -1027,6 +1027,9 @@ body:not([data-theme]) .bell-reminder svg { background: #e8c596; }
   font-size: 18px;
   line-height: 1.25;
 }
+.home-quote q { display: inline; quotes: "“" "”"; }
+.home-quote cite { display: inline; margin-left: 8px; color: color-mix(in srgb, var(--copy-muted) 76%, var(--copy)); font-family: "DM Sans", sans-serif; font-size: 10px; font-style: normal; font-weight: 700; letter-spacing: .04em; }
+.home-quote cite::before { content: "— "; }
 
 body[data-theme="fire"], body:not([data-theme]) {
   --surface-0: #d4ad7c;

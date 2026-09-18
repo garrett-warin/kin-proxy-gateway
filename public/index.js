@@ -13,14 +13,11 @@ const starters = [
   { id: "school", label: "FCPS", url: "https://www.fcps.edu" },
 ];
 const homeQuotes = [
-  "Take it one page at a time.",
-  "Stay curious.",
-  "A fresh tab is a fresh start.",
-  "Find something worth knowing.",
-  "Keep the good ideas close.",
-  "Small searches can lead somewhere big.",
-  "Make room for a new idea.",
-  "Learn something unexpected today.",
+  { text: "Stay hungry. Stay foolish.", author: "Steve Jobs" },
+  { text: "To thine own self be true.", author: "William Shakespeare" },
+  { text: "Nothing great was ever achieved without enthusiasm.", author: "Ralph Waldo Emerson" },
+  { text: "I think, therefore I am.", author: "René Descartes" },
+  { text: "Lost time is never found again.", author: "Benjamin Franklin" },
 ];
 const themeDefaults = {
   fire: { background: "embers", accent: "#ff7a36" },
@@ -429,7 +426,8 @@ function showReloadQuote() {
   const choices = homeQuotes.map((_, index) => index).filter((index) => index !== previous);
   const index = choices[Math.floor(Math.random() * choices.length)] ?? 0;
   sessionStorage.setItem("kin-last-quote", String(index));
-  document.querySelector("#home-quote").textContent = homeQuotes[index];
+  document.querySelector("#home-quote-text").textContent = homeQuotes[index].text;
+  document.querySelector("#home-quote-author").textContent = homeQuotes[index].author;
 }
 function beginVerification() {
   const returnPath = `${location.pathname}${location.search}${location.hash}`;
