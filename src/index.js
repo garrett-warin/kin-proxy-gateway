@@ -1,17 +1,34 @@
 import { createServer } from "node:http";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { fileURLToPath } from "url";
 import { hostname } from "node:os";
 import { server as relayEngine, logging } from "@mercuryworkshop/wisp-js/server";
 import Fastify, { LogController } from "fastify";
 import fastifyStatic from "@fastify/static";
-import { createDeviceSession, verifyDeviceSession, verifyLaunchToken } from "./auth.js";
 
 const publicPath = fileURLToPath(new URL("../public/", import.meta.url));
 const tokenSecret = process.env.KIN_TOKEN_SECRET;
-const deviceSessionLifetimeSeconds = 60 * 60 * 24 * 365;
 const accessGateUrl = "https://script.google.com/a/macros/fcpsschools.net/s/AKfycbw6cusU0GMU3G1aw69gavCCOShiBXZ_W-cXG8Wo7s8i0PNTJaf2Th6LwNwj5oEfVSXf/exec";
 
 if (!tokenSecret) throw new Error("KIN_TOKEN_SECRET is required.");
+
+function fromBase64Url(value) {
+	return Buffer.from(value.replace(/-/g, "+").replace(/_/g, "/"), "base64");
+}
+
+function verifyKinToken(token) {
+	if (!token || token.length > 4096) return null;
+	const [header, payload, signature] = token.split(".");
+	if (!header || !payload || !signature) return null;
+	const expected = createHmac("sha256", tokenSecret).update(`${header}.${payload}`).digest();
+	const supplied = fromBase64Url(signature);
+	if (expected.length !== supplied.length || !timingSafeEqual(expected, supplied)) return null;
+	try {
+		const claims = JSON.parse(fromBase64Url(payload).toString("utf8"));
+		if (claims.iss !== "kin-fcps" || typeof claims.email !== "string" || typeof claims.exp !== "number" || claims.exp <= Math.floor(Date.now() / 1000)) return null;
+		return claims;
+	} catch { return null; }
+}
 
 function cookieValue(header, name) {
 	return String(header || "").split(";").map((part) => part.trim()).find((part) => part.startsWith(`${name}=`))?.slice(name.length + 1) || "";
@@ -65,7 +82,7 @@ const fastify = Fastify({
 				handler(req, res);
 			})
 			.on("upgrade", (req, socket, head) => {
-				if (req.url.endsWith("/relay/") && verifyDeviceSession(cookieValue(req.headers.cookie, "kin_session"), tokenSecret)) relayEngine.routeRequest(req, socket, head);
+				if (req.url.endsWith("/relay/") && verifyKinToken(cookieValue(req.headers.cookie, "kin_session"))) relayEngine.routeRequest(req, socket, head);
 				else socket.end();
 			});
 	},
@@ -90,18 +107,17 @@ fastify.addHook("onRequest", async (request, reply) => {
 	}
 	const incomingToken = url.searchParams.get("kin_token");
 	if (incomingToken) {
-		const claims = verifyLaunchToken(incomingToken, tokenSecret);
+		const claims = verifyKinToken(incomingToken);
 		if (!claims) return reply.redirect(`/auth/start?return_path=${encodeURIComponent("/")}`, 302);
-		const deviceSession = createDeviceSession(claims, tokenSecret, deviceSessionLifetimeSeconds);
 		url.searchParams.delete("kin_token");
 		const savedReturnPath = safeReturnPath(decodedCookieValue(request.headers.cookie, "kin_return_path"));
 		reply.header("Set-Cookie", [
-			`kin_session=${deviceSession}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${deviceSessionLifetimeSeconds}`,
+			`kin_session=${incomingToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${Math.max(1, claims.exp - Math.floor(Date.now() / 1000))}`,
 			"kin_return_path=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0",
 		]);
 		return reply.redirect(savedReturnPath === "/" ? `${url.pathname}${url.search}` : savedReturnPath, 302);
 	}
-	if (!verifyDeviceSession(cookieValue(request.headers.cookie, "kin_session"), tokenSecret)) {
+	if (!verifyKinToken(cookieValue(request.headers.cookie, "kin_session"))) {
 		const isDocument = request.headers["sec-fetch-dest"] === "document" || String(request.headers.accept || "").includes("text/html");
 		if (isDocument && (request.method === "GET" || request.method === "HEAD")) {
 			const returnPath = safeReturnPath(`${url.pathname}${url.search}`);
@@ -112,7 +128,7 @@ fastify.addHook("onRequest", async (request, reply) => {
 });
 
 fastify.get("/api/session", async (request, reply) => {
-	const claims = verifyDeviceSession(cookieValue(request.headers.cookie, "kin_session"), tokenSecret);
+	const claims = verifyKinToken(cookieValue(request.headers.cookie, "kin_session"));
 	const name = typeof claims?.name === "string" ? claims.name.trim() : "";
 	const fallback = claims?.email?.split("@")[0] || "friend";
 	const firstName = (name || fallback).split(/\s+/)[0].slice(0, 40);
