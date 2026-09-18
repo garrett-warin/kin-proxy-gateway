@@ -1139,3 +1139,151 @@ body:not([data-theme]) .primary { background: #4a3026; color: var(--cream); }
   .brand-mark img { width: 40px; height: 30px; object-fit: contain; }
   .wordmark { width: 244px; height: 108px; }
 }
+
+/* Five-tap wordmark easter egg */
+.wordmark-trigger {
+  display: block;
+  width: max-content;
+  margin: 0 auto;
+  border: 0;
+  outline-offset: 5px;
+  background: transparent;
+  padding: 0;
+  cursor: default;
+}
+.wordmark-trigger.tap { animation: wordmark-tap .2s ease-out; }
+@keyframes wordmark-tap { 50% { transform: rotate(-1.5deg) scale(.97); } }
+
+.site-fire {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  overflow: hidden;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .28s ease, visibility .28s ease;
+}
+.site-fire.active { visibility: visible; opacity: 1; }
+body.site-burning .browser-shell { pointer-events: none; user-select: none; }
+.site-fire::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(111, 35, 13, .2);
+  box-shadow: inset 0 -180px 150px rgba(205, 58, 14, .36), inset 0 0 90px rgba(94, 25, 8, .24);
+  pointer-events: none;
+}
+.fire-flames { position: absolute; inset: auto 0 -36px; height: 330px; filter: drop-shadow(0 -16px 30px rgba(226, 67, 16, .34)); }
+.fire-flames i {
+  position: absolute;
+  bottom: 0;
+  left: var(--x);
+  width: var(--width);
+  height: var(--height);
+  border-radius: 68% 32% 62% 38% / 82% 38% 62% 18%;
+  background: #f25b22;
+  transform: rotate(var(--lean));
+  transform-origin: 50% 100%;
+  animation: flame-dance 1.15s var(--delay) ease-in-out infinite alternate;
+}
+.fire-flames i::before {
+  content: "";
+  position: absolute;
+  right: 22%;
+  bottom: -4%;
+  left: 22%;
+  height: 70%;
+  border-radius: 70% 30% 60% 40% / 82% 42% 58% 18%;
+  background: #ffb33f;
+}
+.fire-flames i::after {
+  content: "";
+  position: absolute;
+  right: 34%;
+  bottom: -5%;
+  left: 34%;
+  height: 42%;
+  border-radius: 75% 25% 65% 35%;
+  background: var(--cream-pale);
+}
+@keyframes flame-dance { from { transform: rotate(var(--lean)) scaleY(.88) skewX(-4deg); } to { transform: rotate(calc(var(--lean) + 6deg)) scaleY(1.08) skewX(5deg); } }
+
+.fire-embers { position: absolute; inset: 0; }
+.fire-embers i {
+  position: absolute;
+  bottom: 4%;
+  left: var(--x);
+  width: 5px;
+  height: 8px;
+  border-radius: 70% 30% 60% 40%;
+  background: #ff9a32;
+  box-shadow: 0 0 9px #f25b22;
+  animation: ember-fly 2.8s var(--delay) linear infinite;
+}
+@keyframes ember-fly { 0% { opacity: 0; transform: translate(0, 0) rotate(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--drift), -78vh) rotate(240deg); } }
+
+.fire-message {
+  position: absolute;
+  top: 11%;
+  left: 50%;
+  margin: 0;
+  transform: translateX(-50%);
+  color: var(--cream-pale);
+  font-family: "Caveat", cursive;
+  font-size: clamp(30px, 6vw, 64px);
+  font-weight: 700;
+  text-shadow: 0 3px 20px rgba(58, 20, 8, .7);
+  white-space: nowrap;
+}
+.fire-bucket {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 4;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  border: 1px solid #96c9d2;
+  border-radius: 21px 12px 21px 12px;
+  background: #d4eef0;
+  color: #23434a;
+  padding: 10px 14px 9px;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 7px 8px 0 rgba(30, 54, 57, .24);
+  animation: bucket-arrive .5s .25s ease-out both;
+}
+.fire-bucket:hover { transform: translateY(-2px) rotate(-2deg); }
+.fire-bucket:focus-visible { outline: 3px solid var(--cream-pale); outline-offset: 3px; }
+.fire-bucket svg { width: 48px; height: 48px; fill: #8fc7cf; stroke: #284b52; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.fire-bucket svg .water { fill: none; stroke: #e3f8f7; }
+.fire-bucket span { font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+@keyframes bucket-arrive { from { opacity: 0; transform: translateY(-25px) rotate(8deg); } to { opacity: 1; transform: none; } }
+
+.water-curtain {
+  position: absolute;
+  z-index: 3;
+  top: -115%;
+  right: -15%;
+  width: 135%;
+  height: 125%;
+  border-radius: 0 0 48% 40%;
+  background: rgba(111, 202, 218, .78);
+  transform: rotate(-7deg);
+  pointer-events: none;
+}
+.site-fire.extinguishing .water-curtain { animation: water-pour 1.15s cubic-bezier(.18,.75,.24,1) both; }
+.site-fire.extinguishing .fire-bucket { animation: bucket-pour .7s ease-in-out both; }
+.site-fire.extinguishing .fire-flames,
+.site-fire.extinguishing .fire-embers,
+.site-fire.extinguishing .fire-message { transition: opacity .55s .28s, transform .7s .2s; opacity: 0; }
+.site-fire.extinguishing .fire-flames { transform: translateY(180px) scaleY(.35); }
+@keyframes water-pour { 0% { top: -125%; } 62% { top: -12%; } 100% { top: 110%; } }
+@keyframes bucket-pour { 40%, 75% { transform: rotate(-72deg) translate(-8px, 12px); } 100% { transform: rotate(-12deg); } }
+
+@media (max-width: 620px) {
+  .fire-bucket { top: 14px; right: 14px; padding: 8px 10px; }
+  .fire-bucket svg { width: 38px; height: 38px; }
+  .fire-message { top: 18%; }
+}

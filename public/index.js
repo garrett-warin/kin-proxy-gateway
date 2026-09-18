@@ -70,6 +70,8 @@ let bellReminders = localStorage.getItem("kin-bell-reminders") !== "false";
 let bellSound = localStorage.getItem("kin-bell-sound") !== "false";
 let reminderAudio;
 let sessionCheckPromise;
+let wordmarkClickCount = 0;
+let wordmarkClickTimer;
 let selectedId;
 let seq = 0;
 let onboardingStep = 0;
@@ -428,6 +430,58 @@ function showReloadQuote() {
   sessionStorage.setItem("kin-last-quote", String(index));
   document.querySelector("#home-quote-text").textContent = homeQuotes[index].text;
   document.querySelector("#home-quote-author").textContent = homeQuotes[index].author;
+}
+function buildSiteFire() {
+  const flames = document.querySelector("#fire-flames");
+  const embers = document.querySelector("#fire-embers");
+  if (flames.childElementCount) return;
+  for (let index = 0; index < 26; index += 1) {
+    const flame = document.createElement("i");
+    flame.style.setProperty("--x", `${index * 4 - 2}%`);
+    flame.style.setProperty("--height", `${100 + Math.random() * 180}px`);
+    flame.style.setProperty("--width", `${55 + Math.random() * 75}px`);
+    flame.style.setProperty("--delay", `${Math.random() * -1.4}s`);
+    flame.style.setProperty("--lean", `${-12 + Math.random() * 24}deg`);
+    flames.append(flame);
+  }
+  for (let index = 0; index < 34; index += 1) {
+    const ember = document.createElement("i");
+    ember.style.setProperty("--x", `${Math.random() * 100}%`);
+    ember.style.setProperty("--delay", `${Math.random() * -3}s`);
+    ember.style.setProperty("--drift", `${-45 + Math.random() * 90}px`);
+    embers.append(ember);
+  }
+}
+function igniteSite() {
+  const fire = document.querySelector("#site-fire");
+  if (fire.classList.contains("active")) return;
+  buildSiteFire();
+  fire.classList.remove("extinguishing");
+  fire.classList.add("active");
+  fire.setAttribute("aria-hidden", "false");
+  document.body.classList.add("site-burning");
+  document.querySelector("#fire-bucket").focus();
+}
+function extinguishSite() {
+  const fire = document.querySelector("#site-fire");
+  if (!fire.classList.contains("active") || fire.classList.contains("extinguishing")) return;
+  fire.classList.add("extinguishing");
+  setTimeout(() => {
+    fire.classList.remove("active", "extinguishing");
+    fire.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("site-burning");
+    wordmarkClickCount = 0;
+    document.querySelector("#wordmark-trigger").focus();
+  }, 1200);
+}
+function countWordmarkClick() {
+  if (document.querySelector("#site-fire").classList.contains("active")) return;
+  wordmarkClickCount += 1;
+  clearTimeout(wordmarkClickTimer);
+  document.querySelector("#wordmark-trigger").classList.remove("tap");
+  requestAnimationFrame(() => document.querySelector("#wordmark-trigger").classList.add("tap"));
+  if (wordmarkClickCount >= 5) { wordmarkClickCount = 0; igniteSite(); return; }
+  wordmarkClickTimer = setTimeout(() => { wordmarkClickCount = 0; }, 3200);
 }
 function beginVerification() {
   const returnPath = `${location.pathname}${location.search}${location.hash}`;
@@ -803,6 +857,8 @@ document.querySelector("#bell-sound-toggle").onchange = (event) => { bellSound =
 scheduleButton.onclick = () => toggleSchedulePanel();
 document.querySelector("#schedule-close").onclick = () => toggleSchedulePanel(false);
 document.querySelector("#bell-reminder-close").onclick = () => document.querySelector("#bell-reminder").classList.remove("show");
+document.querySelector("#wordmark-trigger").onclick = countWordmarkClick;
+document.querySelector("#fire-bucket").onclick = extinguishSite;
 document.addEventListener("click", (event) => { if (!schedulePanel.classList.contains("hidden") && !event.target.closest("#schedule-panel") && !event.target.closest("#schedule-button")) toggleSchedulePanel(false); });
 document.addEventListener("pointerdown", armReminderAudio, { once: true });
 document.addEventListener("keydown", armReminderAudio, { once: true });
